@@ -36,3 +36,4 @@ class LivePlotter(LiveViz):
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+        plt.show()
