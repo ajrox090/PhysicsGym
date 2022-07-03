@@ -17,27 +17,23 @@ def main():
     scene_count = 500
     batch_size = 10
 
-    train_range = range(200, 1000)
-    val_range = range(100, 200)
-    test_range = range(0, 100)
-
-    for batch_index in range(scene_count // batch_size):
-        scene = Scene.create(data_path, count=batch_size)
-        print(scene)
-        world = World()
-        u0 = BurgersVelocity(
-            domain,
-            velocity=GaussianClash(batch_size),
-            viscosity=viscosity,
-            batch_size=batch_size,
-            name='burgers'
-        )
-        u = world.add(u0, physics=Burgers(diffusion_substeps=diffusion_substeps))
-        force = world.add(FieldEffect(GaussianForce(batch_size), ['velocity']))
-        scene.write(world.state, frame=0)
-        for frame in range(1, step_count + 1):
-            world.step(dt=dt)
-            scene.write(world.state, frame=frame)
+    # for batch_index in range(scene_count // batch_size):
+    #     scene = Scene.create(data_path, count=batch_size)
+    #     print(scene)
+    #     world = World()
+    #     u0 = BurgersVelocity(
+    #         domain,
+    #         velocity=GaussianClash(batch_size),
+    #         viscosity=viscosity,
+    #         batch_size=batch_size,
+    #         name='burgers'
+    #     )
+    #     u = world.add(u0, physics=Burgers(diffusion_substeps=diffusion_substeps))
+    #     force = world.add(FieldEffect(GaussianForce(batch_size), ['velocity']))
+    #     scene.write(world.state, frame=0)
+    #     for frame in range(1, step_count + 1):
+    #         world.step(dt=dt)
+    #         scene.write(world.state, frame=frame)
 
     n_envs = 1  # On how many environments to train in parallel, load balancing
     final_reward_factor = step_count  # How hard to punish the agent for not reaching the goal if that is the case
@@ -58,12 +54,13 @@ def main():
         n_epochs=n_epochs,
         learning_rate=learning_rate,
         batch_size=rl_batch_size,
+        # data_path=data_path,
         # test_path=None, # data_path,
         test_range=None,  # test_range,
     )
 
     rl_trainer.train(n_rollouts=2, save_freq=10)
-    rl_trainer.render()
+    rl_trainer.render_env()
     plt.show()
 
 

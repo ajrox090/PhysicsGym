@@ -56,7 +56,7 @@ class ExperimentFolder:
 
     def get(self, env_cls, env_kwargs, agent_kwargs):
         print('Tensorboard log path: %s' % self.tensorboard_path)
-        if not self.can_be_loaded: #disabled temporariliy
+        if not self.can_be_loaded:  # disabled temporariliy
             print('Loading existing agent from %s' % (self.agent_path + '.zip'))
             return self._load(env_cls, env_kwargs, agent_kwargs)
         else:
@@ -162,6 +162,10 @@ class Experiment:
     def step_env(self, act):
         return self.env.step(act)
 
+    def render_env(self):
+        assert isinstance(self.env, VecEnv)
+        self.env.render(mode='live')
+
 
 class BurgersTrainingExpr(Experiment):
     def __init__(
@@ -181,7 +185,6 @@ class BurgersTrainingExpr(Experiment):
             val_range=range(100, 200),
             test_range=range(100),
     ):
-
         env_kwargs = dict(
             num_envs=n_envs,
             step_count=step_count,
@@ -197,20 +200,6 @@ class BurgersTrainingExpr(Experiment):
         # Only add a fresh running mean to new experiments
         if not ExperimentFolder.exists(path):
             env_kwargs['reward_rms'] = RunningMeanStd()
-
-        if data_path is not None:
-            self.val_env = BurgersFixedSetEnv(
-                data_path=data_path,
-                data_range=val_range,
-                num_envs=len(val_range),
-                **evaluation_env_kwargs
-            )
-            self.test_env = BurgersFixedSetEnv(
-                data_path=data_path,
-                data_range=test_range,
-                num_envs=len(test_range),
-                **evaluation_env_kwargs
-            )
 
         agent_kwargs = dict(
             verbose=0,
@@ -233,65 +222,3 @@ class BurgersTrainingExpr(Experiment):
         )
 
         super().__init__(path, BurgersEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
-
-    def render(self) -> None:
-        assert isinstance(self.env, VecEnv)
-        self.env.render(mode='live')
-
-    def _infer_forces(self, env: BurgersFixedSetEnv):
-        self.agent.set_env(env)
-
-        obs = env.reset()
-        done = False
-        forces = np.zeros((env.num_envs,), dtype=np.float32)
-
-        i = 0
-
-        while not done:
-            i += 1
-            act = self.predict(obs, False)
-            obs, _, dones, infos = env.step(act)
-            done = dones[0]
-            forces += [infos[i]['forces'] for i in range(len(infos))]
-
-        self.agent.set_env(self.env)
-
-        return forces
-
-    def _infer_frames(self, env: BurgersFixedSetEnv):
-        self.agent.set_env(env)
-
-        obs = np.array(env.reset())
-        init = obs[:, :, 0]
-        goal = obs[:, :, 1]
-        gt_frames = env.frames
-        cont_frames = [init]
-        pass_frames = [init]
-
-        pass_state = env._get_init_state()
-
-        done = False
-        infos = []
-
-        while not done:
-            act = self.predict(obs)
-            obs, _, dones, infos = env.step(act)
-            pass_state = env._step_sim(pass_state, ())
-            pass_frames.append(pass_state.velocity.data)
-            done = dones[0]
-            if not done:
-                cont_frames.append(np.array(obs)[:, :, 0])
-
-        cont_frames.append(goal)
-
-        self.agent.set_env(self.env)
-
-        return cont_frames, gt_frames, pass_frames
-
-    def _get_forces(self, env: BurgersFixedSetEnv):
-        forces = self._infer_forces(env)
-        force_avg = np.sum(forces) / env.num_envs
-
-        return force_avg
-        # logger.record(scalar_name, force_avg)
-        # print('Forces on data set: %f' % force_avg)
