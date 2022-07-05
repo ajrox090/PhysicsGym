@@ -7,7 +7,7 @@ from src.experiment import BurgersTrainingExpr
 
 
 def main():
-    N = 32
+    N = 128
     domain = Domain([N], box=box[-1:1])
     viscosity = 0.03
     # viscosity = 0.01/(N*np.pi)
@@ -24,6 +24,7 @@ def main():
     rl_batch_size = n_envs * step_count  # Batch size for agent updates
 
     rl_trainer = BurgersTrainingExpr(
+        N,
         path='networks/rl-models/time_bench',
         domain=domain,
         viscosity=viscosity,
@@ -37,9 +38,12 @@ def main():
         batch_size=rl_batch_size,
         test_range=None,  # test_range,
     )
-
+    # rl_trainer.reset_env()
+    # rl_trainer.step_env()
+    # rl_trainer.show_state()
     rl_trainer.train(n_rollouts=2, save_freq=10)
-    rl_trainer.visualize(step_count, N)
+    # rl_trainer.visualize(step_count, N)
+    rl_trainer.show_state()
     # rl_trainer.plot()
     # plt.show()
     # rl_trainer.render_env(mode='live')

@@ -137,11 +137,12 @@ class ExperimentFolder:
 
 
 class Experiment:
-    def __init__(self, path, env_cls, env_kwargs, agent_kwargs, steps_per_rollout, num_envs=1):
+    def __init__(self, N, path, env_cls, env_kwargs, agent_kwargs, steps_per_rollout, num_envs=1):
         self.folder = ExperimentFolder(path)
         self.agent, self.env = self.folder.get(env_cls, env_kwargs, agent_kwargs)
         self.steps_per_rollout = steps_per_rollout
         self.num_envs = num_envs
+        self.N = N
 
         var = lambda _: self.folder.store(self.agent, env_kwargs, agent_kwargs)
 
@@ -164,7 +165,7 @@ class Experiment:
         fig = plt.figure().gca()
         pltx = np.linspace(-1, 1, len(vel_resim[0].flatten()))
         fig.plot(pltx, vel_resim[0].flatten(), lw=2, color='blue', label="t=0")
-        fig.plot(pltx, vel_resim[STEPS//4].flatten(), lw=2, color='green', label="t=0.125")
+        fig.plot(pltx, vel_resim[STEPS // 4].flatten(), lw=2, color='green', label="t=0.125")
         fig.plot(pltx, vel_resim[STEPS // 2].flatten(), lw=2, color='cyan', label="t=0.25")
         fig.plot(pltx, vel_resim[STEPS - 1].flatten(), lw=2, color='purple', label="t=0.5")
         fig.plot(pltx, t0gt, lw=2, color='gray', label="t=0 Reference")
@@ -175,6 +176,9 @@ class Experiment:
         plt.legend()
         plt.show()
 
+    def show_state(self):
+        return self.env.show_state()
+
     def reset_env(self):
         return self.env.reset()
 
@@ -182,8 +186,8 @@ class Experiment:
         act, _ = self.agent.predict(obs, deterministic=deterministic)
         return act
 
-    def step_env(self, act):
-        return self.env.step(act)
+    def step_env(self):
+        return self.env.step_wait()
 
     def render_env(self, mode: str):
         assert isinstance(self.env, VecEnv)
@@ -193,6 +197,7 @@ class Experiment:
 class BurgersTrainingExpr(Experiment):
     def __init__(
             self,
+            N,
             path,
             domain,
             viscosity,
@@ -209,6 +214,7 @@ class BurgersTrainingExpr(Experiment):
             test_range=range(100),
     ):
         env_kwargs = dict(
+            N=N,
             num_envs=n_envs,
             step_count=step_count,
             domain=domain,
@@ -235,7 +241,7 @@ class BurgersTrainingExpr(Experiment):
                     sizes=[4, 8, 16, 16, 16]
                 ),
                 vf_kwargs=dict(
-                    sizes=[4, 8, 16, 16, 16]
+                    sizes=[4, 8, 16, 16, 16, 16, 16]
                 ),
             ),
             n_steps=steps_per_rollout,
@@ -244,7 +250,7 @@ class BurgersTrainingExpr(Experiment):
             batch_size=batch_size,
         )
 
-        super().__init__(path, BurgersEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
+        super().__init__(N, path, BurgersEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
 
 
 class HeatTrainingExper(Experiment):

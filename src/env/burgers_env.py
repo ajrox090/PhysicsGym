@@ -19,6 +19,7 @@ class BurgersEnv(VecEnv):
 
     def __init__(
             self,
+            N,
             num_envs: int,
             step_count: int = 32,
             domain: phiflow.Domain = phiflow.Domain((32,), box=phiflow.box[0:1]),
@@ -35,7 +36,7 @@ class BurgersEnv(VecEnv):
         action_space = gym.spaces.Box(-np.inf, np.inf, shape=act_shape, dtype=np.float32)
 
         super().__init__(num_envs, observation_space, action_space)
-
+        self.N = N
         self.vis_list = []
         self.reward_range = (-float('inf'), float('inf'))
         # self.spec = None
@@ -85,6 +86,8 @@ class BurgersEnv(VecEnv):
         forces = self.actions
         forces_effect = phiflow.FieldEffect(phiflow.CenteredGrid(self.actions, box=self.domain.box), ['velocity'])
         self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
+        # self.cont_state = self._step_sim(self.cont_state, ())
+        self.vis_list.append(self.cont_state)
 
         # Perform reference simulation only when evaluating results -> after render was called once
         if self.test_mode:
@@ -113,7 +116,6 @@ class BurgersEnv(VecEnv):
 
         self.reward_rms.update(rew)
         rew = (rew - self.reward_rms.mean) / np.sqrt(self.reward_rms.var)
-        self.vis_list.append(self.cont_state)
         # self.render(mode='live')
         # self.show_state(self.cont_state, 'Cont State velocity')
         return obs, rew, done, info
@@ -222,7 +224,6 @@ class BurgersEnv(VecEnv):
         fields = [f.velocity.data[0].reshape(-1) for f in [
             self.init_state,
             self.goal_state,
-            # self.pass_state,
             self.gt_state,
             self.cont_state,
         ]]
@@ -230,20 +231,23 @@ class BurgersEnv(VecEnv):
         labels = [
             'Initial state',
             'Goal state',
-            # 'Uncontrolled simulation',
             'Ground truth simulation',
             'Controlled simulation',
         ]
 
         return fields, labels
 
-    @staticmethod
-    def show_state(instate, title):
+    def show_state(self):
         # convert state's velocity data to an image
-        state_img = np.asarray(np.concatenate(instate.velocity.data, axis=-1), dtype=np.float32)
+        assert len(self.vis_list) > 0
+        vels = [v.velocity.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
+        vels_img = np.array(np.concatenate(vels, axis=1), dtype=np.float32)
+
+        # convert state's velocity data to an image
+        # state_img = np.asarray(np.concatenate(instate.velocity.data, axis=-1), dtype=np.float32)
         # we only have 33 time steps, blow up by a factor of 2^4 to make it easier to see
         # (could also be done with more evaluations of network)
-        state_img = np.expand_dims(state_img, axis=2)
+        state_img = np.expand_dims(vels_img, axis=2)
         for i in range(4):
             state_img = np.concatenate([state_img, state_img], axis=2)
 
@@ -255,5 +259,5 @@ class BurgersEnv(VecEnv):
         pylab.colorbar(im)
         pylab.xlabel('time')
         pylab.ylabel('x')
-        pylab.title(title)
+        pylab.title('all velocities flow')
         pylab.show()
