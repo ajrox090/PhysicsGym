@@ -37,7 +37,6 @@ class BurgersEnv(VecEnv):
 
         super().__init__(num_envs, observation_space, action_space)
         self.N = N
-        self.vis_list = []
         self.reward_range = (-float('inf'), float('inf'))
         # self.spec = None
         self.exp_name = exp_name
@@ -62,6 +61,8 @@ class BurgersEnv(VecEnv):
         self.lviz = None
         self.gifviz = None
         self.pngviz = None
+        self.vis_list = []
+        self.vels_gt = []
 
     def reset(self) -> VecEnvObs:
         self.step_idx = 0
@@ -90,9 +91,11 @@ class BurgersEnv(VecEnv):
         self.vis_list.append(self.cont_state)
 
         # Perform reference simulation only when evaluating results -> after render was called once
+        self.render(mode='live')
         if self.test_mode:
             # self.pass_state = self._step_sim(self.pass_state, ())
             self.gt_state = self._step_gt()
+            self.vels_gt.append(self.gt_state)
 
         obs = self._build_obs()
         rew = self._build_rew(forces)
@@ -116,7 +119,6 @@ class BurgersEnv(VecEnv):
 
         self.reward_rms.update(rew)
         rew = (rew - self.reward_rms.mean) / np.sqrt(self.reward_rms.var)
-        # self.render(mode='live')
         # self.show_state(self.cont_state, 'Cont State velocity')
         return obs, rew, done, info
 
@@ -237,7 +239,7 @@ class BurgersEnv(VecEnv):
 
         return fields, labels
 
-    def show_state(self):
+    def show_state(self, title='all velocities flow'):
         # convert state's velocity data to an image
         assert len(self.vis_list) > 0
         vels = [v.velocity.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
@@ -259,5 +261,30 @@ class BurgersEnv(VecEnv):
         pylab.colorbar(im)
         pylab.xlabel('time')
         pylab.ylabel('x')
-        pylab.title('all velocities flow')
+        pylab.title(title)
+        pylab.show()
+
+    def show_vels(self, title='state of all velocities'):
+
+        assert len(self.vis_list) > 0
+        vels = [v.velocity.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
+        vels_gt = [v.velocity.data.reshape(self.N, 1) for v in self.vels_gt]  # gives a list of 2D arrays
+        a1 = self.step_count // 3
+        a2 = self.step_count * 2 // 3
+
+        fig = pylab.figure().gca()
+        fig.plot(np.linspace(-1, 1, len(vels[0].flatten())),
+                 vels[0].flatten(), lw=2, color='blue', label="t=0")
+        fig.plot(np.linspace(-1, 1, len(vels[a1].flatten())), vels[a1].flatten(),
+                 lw=2, color='green', label="t=0.3125")
+        fig.plot(np.linspace(-1, 1, len(vels[a2].flatten())), vels[a2].flatten(),
+                 lw=2, color='cyan', label="t=0.625")
+        fig.plot(np.linspace(-1, 1, len(vels[self.step_count].flatten())), vels[self.step_count].flatten(),
+                 lw=2, color='purple', label="t=1")
+        fig.plot(np.linspace(-1, 1, len(vels_gt[self.step_count].flatten())), vels_gt[self.step_count].flatten(),
+                 lw=2, color='gray', label="gt=1")
+        pylab.xlabel('x')
+        pylab.ylabel('u')
+        pylab.legend()
+        pylab.title(title)
         pylab.show()

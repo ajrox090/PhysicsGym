@@ -156,28 +156,11 @@ class Experiment:
         plt.title('Reward unnormalized')
         return plt.plot(avg_rew)
 
-    def visualize(self, step_count=32, N=128):
-        STEPS = step_count
-        t0gt = np.asarray([[-math.sin(np.pi * x) * 1.] for x in np.linspace(-1, 1, N)])
-        assert len(self.env.venv.vis_list) > 0
-        vels = self.env.venv.vis_list
-        vel_resim = [x.velocity.data for x in vels]
-        fig = plt.figure().gca()
-        pltx = np.linspace(-1, 1, len(vel_resim[0].flatten()))
-        fig.plot(pltx, vel_resim[0].flatten(), lw=2, color='blue', label="t=0")
-        fig.plot(pltx, vel_resim[STEPS // 4].flatten(), lw=2, color='green', label="t=0.125")
-        fig.plot(pltx, vel_resim[STEPS // 2].flatten(), lw=2, color='cyan', label="t=0.25")
-        fig.plot(pltx, vel_resim[STEPS - 1].flatten(), lw=2, color='purple', label="t=0.5")
-        fig.plot(pltx, t0gt, lw=2, color='gray', label="t=0 Reference")
-        # optionally show GT, compare to ˓→blue
-        plt.title("Resimulated u from solution at t=0")
-        plt.xlabel('x')
-        plt.ylabel('u')
-        plt.legend()
-        plt.show()
-
     def show_state(self):
-        return self.env.show_state()
+        self.env.show_state()
+
+    def show_vels(self):
+        self.env.show_vels()
 
     def reset_env(self):
         return self.env.reset()
