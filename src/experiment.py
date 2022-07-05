@@ -1,3 +1,4 @@
+import math
 import os
 import pickle
 
@@ -17,7 +18,7 @@ from src.env.heat_invader_env import HeatInvaderEnv
 from src.policy import CustomActorCriticPolicy
 from src.env.burgers_fixedset_env import BurgersFixedSetEnv
 from src.networks import RES_UNET, CNN_FUNNEL
-from src.vis.monitor_env import MonitorEnv, VecMonitor
+from src.vis.monitor_env import VecMonitor
 
 
 class ExperimentFolder:
@@ -151,7 +152,28 @@ class Experiment:
     def plot(self):
         monitor_table = self.folder.get_monitor_table()
         avg_rew = monitor_table['rew_unnormalized']
+        plt.title('Reward unnormalized')
         return plt.plot(avg_rew)
+
+    def visualize(self, step_count=32, N=128):
+        STEPS = step_count
+        t0gt = np.asarray([[-math.sin(np.pi * x) * 1.] for x in np.linspace(-1, 1, N)])
+        assert len(self.env.venv.vis_list) > 0
+        vels = self.env.venv.vis_list
+        vel_resim = [x.velocity.data for x in vels]
+        fig = plt.figure().gca()
+        pltx = np.linspace(-1, 1, len(vel_resim[0].flatten()))
+        fig.plot(pltx, vel_resim[0].flatten(), lw=2, color='blue', label="t=0")
+        fig.plot(pltx, vel_resim[STEPS//4].flatten(), lw=2, color='green', label="t=0.125")
+        fig.plot(pltx, vel_resim[STEPS // 2].flatten(), lw=2, color='cyan', label="t=0.25")
+        fig.plot(pltx, vel_resim[STEPS - 1].flatten(), lw=2, color='purple', label="t=0.5")
+        fig.plot(pltx, t0gt, lw=2, color='gray', label="t=0 Reference")
+        # optionally show GT, compare to ˓→blue
+        plt.title("Resimulated u from solution at t=0")
+        plt.xlabel('x')
+        plt.ylabel('u')
+        plt.legend()
+        plt.show()
 
     def reset_env(self):
         return self.env.reset()
@@ -163,9 +185,9 @@ class Experiment:
     def step_env(self, act):
         return self.env.step(act)
 
-    def render_env(self):
+    def render_env(self, mode: str):
         assert isinstance(self.env, VecEnv)
-        self.env.render(mode='live')
+        self.env.render(mode=mode)
 
 
 class BurgersTrainingExpr(Experiment):
@@ -268,7 +290,7 @@ class HeatTrainingExper(Experiment):
                     sizes=[4, 8, 16, 16, 16]
                 ),
                 vf_kwargs=dict(
-                    sizes=[4, 8, 16, 16, 16]
+                    sizes=[4, 8, 16, 16, 16, 16, 16]
                 ),
             ),
             n_steps=steps_per_rollout,

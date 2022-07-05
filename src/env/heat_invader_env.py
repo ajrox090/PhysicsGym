@@ -8,7 +8,7 @@ import gym
 from stable_baselines3.common.vec_env.base_vec_env import VecEnvObs, VecEnvStepReturn, VecEnvIndices
 from phi.physics.heat import HeatDiffusion
 from src.util.heat_util import GaussianClash, GaussianForce
-from src.visualization import LivePlotter
+from src.visualization import LivePlotter, GifPlotter
 
 
 class HeatInvaderEnv(VecEnv):
@@ -116,6 +116,8 @@ class HeatInvaderEnv(VecEnv):
             self._init_ref_states()
             if mode == 'live':
                 self.lviz = LivePlotter()
+            elif mode == 'gif':
+                self.gifviz = GifPlotter('StableBurger-%s' % self.exp_name)
             else:
                 raise NotImplementedError()
 

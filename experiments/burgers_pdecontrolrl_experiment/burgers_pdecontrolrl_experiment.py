@@ -7,33 +7,14 @@ from src.experiment import BurgersTrainingExpr
 
 
 def main():
-    domain = Domain([32], box=box[0:1])
-    viscosity = 0.003
+    N = 32
+    domain = Domain([N], box=box[-1:1])
+    viscosity = 0.03
+    # viscosity = 0.01/(N*np.pi)
     step_count = 32
-    dt = 0.03
+    # dt = 1./step_count
+    dt = 0.01
     diffusion_substeps = 1
-
-    data_path = 'forced-burgers-clash'
-    scene_count = 500
-    batch_size = 10
-
-    # for batch_index in range(scene_count // batch_size):
-    #     scene = Scene.create(data_path, count=batch_size)
-    #     print(scene)
-    #     world = World()
-    #     u0 = BurgersVelocity(
-    #         domain,
-    #         velocity=GaussianClash(batch_size),
-    #         viscosity=viscosity,
-    #         batch_size=batch_size,
-    #         name='burgers'
-    #     )
-    #     u = world.add(u0, physics=Burgers(diffusion_substeps=diffusion_substeps))
-    #     force = world.add(FieldEffect(GaussianForce(batch_size), ['velocity']))
-    #     scene.write(world.state, frame=0)
-    #     for frame in range(1, step_count + 1):
-    #         world.step(dt=dt)
-    #         scene.write(world.state, frame=frame)
 
     n_envs = 1  # On how many environments to train in parallel, load balancing
     final_reward_factor = step_count  # How hard to punish the agent for not reaching the goal if that is the case
@@ -54,14 +35,15 @@ def main():
         n_epochs=n_epochs,
         learning_rate=learning_rate,
         batch_size=rl_batch_size,
-        # data_path=data_path,
-        # test_path=None, # data_path,
         test_range=None,  # test_range,
     )
 
     rl_trainer.train(n_rollouts=2, save_freq=10)
-    rl_trainer.render_env()
-    plt.show()
+    rl_trainer.visualize(step_count, N)
+    # rl_trainer.plot()
+    # plt.show()
+    # rl_trainer.render_env(mode='live')
+    # plt.show()
 
 
 if __name__ == '__main__':

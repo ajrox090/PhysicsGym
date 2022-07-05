@@ -31,7 +31,7 @@ def main():
     )
 
     rl_trainer.train(n_rollouts=2, save_freq=10)
-    rl_trainer.render_env()
+    rl_trainer.render_env(mode='live')
     plt.show()
 
 

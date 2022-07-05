@@ -127,37 +127,3 @@ class VecEnvWrapper(VecEnv):
             shadowed_wrapper_class = self.venv.getattr_depth_check(name, already_found)
 
         return shadowed_wrapper_class
-
-
-class GymEnvWrapper(gym.Env):
-    """
-    gym environment base class
-
-    :param env: the openAI gym environment to wrap
-    :param observation_space: the observation space (cannot be None for now.)
-    :param action_space: the action space (cannot be None for now.)
-    """
-
-    def __init__(self, gymEnv: gym.Env, num_envs: int, observation_space: Optional[gym.spaces.Space] = None,
-                 action_space: Optional[gym.spaces.Space] = None):
-
-        self.env = gymEnv
-        self.observation_space = observation_space or gymEnv.observation_space,
-        self.action_space = action_space or gymEnv.action_space
-        self.class_attributes = dict(inspect.getmembers(self.__class__))
-
-    def step(self, actions: np.ndarray) -> None:
-        self.env.step(actions)
-
-    @abstractmethod
-    def reset(self):  # returns observation
-        pass
-
-    def seed(self, seed: Optional[int] = None) -> List[Union[None, int]]:
-        return self.env.seed(seed)
-
-    def close(self) -> None:
-        return self.env.close()
-
-    def render(self, mode: str = "human") -> Optional[np.ndarray]:
-        return self.env.render(mode=mode)
