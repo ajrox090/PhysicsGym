@@ -2,7 +2,7 @@ import numpy as np
 from typing import Tuple, List, Optional, Union, Any, Type
 
 import phi.flow as phiflow
-
+from phi.physics.burgers import Burgers
 import gym
 # from gym.wrappers.normalize import RunningMeanStd
 from stable_baselines3.common.running_mean_std import RunningMeanStd
@@ -213,7 +213,7 @@ class BurgersEnv(VecEnv):
         super().__init__(num_envs, observation_space, action_space)
 
         self.reward_range = (-float('inf'), float('inf'))
-        self.spec = None
+        # self.spec = None
         self.exp_name = exp_name
         self.domain = domain
         self.step_count = step_count
@@ -231,7 +231,6 @@ class BurgersEnv(VecEnv):
         self.init_state = None
         self.goal_state = None
         self.cont_state = None
-        # self.pass_state = None
         self.gt_state = None
         self.gt_forces = None
         self.lviz = None
@@ -352,7 +351,6 @@ class BurgersEnv(VecEnv):
         return state
 
     def _init_ref_states(self) -> None:
-        # self.pass_state = self.init_state.copied_with()
         self.gt_state = self.init_state.copied_with()
 
     def _build_obs(self) -> np.ndarray:
@@ -365,21 +363,25 @@ class BurgersEnv(VecEnv):
         # Channels last
         return np.array([np.concatenate(obs + (time_data,), axis=-1) for obs in zip(curr_data, goal_data)])
 
-    def _build_rew(self, forces: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def _build_rew(forces: np.ndarray) -> np.ndarray:
         reduced_shape = (forces.shape[0], -1)
         reshaped_forces = forces.reshape(reduced_shape)
         return -np.sum(reshaped_forces ** 2, axis=-1)
 
     # The whole field with one parameter in each direction, flattened out
-    def _get_act_shape(self, field_shape: Tuple[int, ...]) -> Tuple[int, ...]:
+    @staticmethod
+    def _get_act_shape(field_shape: Tuple[int, ...]) -> Tuple[int, ...]:
         act_dim = np.prod(field_shape) * len(field_shape)
-        return (act_dim,)
+        return act_dim,
 
     # Current and goal field with one parameter in each direction and one time channel
-    def _get_obs_shape(self, field_shape: Tuple[int, ...]) -> Tuple[int, ...]:
+    @staticmethod
+    def _get_obs_shape(field_shape: Tuple[int, ...]) -> Tuple[int, ...]:
         return tuple(field_shape) + (2 * len(field_shape) + 1,)
 
-    def _vec_env_indices_to_list(self, raw_indices: VecEnvIndices) -> List[int]:
+    @staticmethod
+    def _vec_env_indices_to_list(raw_indices: VecEnvIndices) -> List[int]:
         if raw_indices is None:
             return []
         if isinstance(raw_indices, int):

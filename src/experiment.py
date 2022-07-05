@@ -12,6 +12,7 @@ from stable_baselines3.common import logger
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 from src.env.burgers_env import BurgersEnv
+from src.env.heat_invader_env import HeatInvaderEnv
 
 from src.policy import CustomActorCriticPolicy
 from src.env.burgers_fixedset_env import BurgersFixedSetEnv
@@ -222,3 +223,58 @@ class BurgersTrainingExpr(Experiment):
         )
 
         super().__init__(path, BurgersEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
+
+
+class HeatTrainingExper(Experiment):
+    def __init__(
+            self,
+            path,
+            domain,
+            diffusivity,
+            step_count,
+            dt,
+            n_envs,
+            steps_per_rollout,
+            n_epochs,
+            learning_rate,
+            batch_size,
+            data_path=None,
+            val_range=range(100, 200),
+            test_range=range(100),
+    ):
+        env_kwargs = dict(
+            num_envs=n_envs,
+            step_count=step_count,
+            domain=domain,
+            dt=dt,
+            diffusivity=diffusivity,
+            exp_name=path,
+        )
+
+        evaluation_env_kwargs = {k: env_kwargs[k] for k in env_kwargs if k != 'num_envs'}
+
+        # Only add a fresh running mean to new experiments
+        if not ExperimentFolder.exists(path):
+            env_kwargs['reward_rms'] = RunningMeanStd()
+
+        agent_kwargs = dict(
+            verbose=0,
+            policy=CustomActorCriticPolicy,
+            policy_kwargs=dict(
+                pi_net=RES_UNET,
+                vf_net=CNN_FUNNEL,
+                vf_latent_dim=16,
+                pi_kwargs=dict(
+                    sizes=[4, 8, 16, 16, 16]
+                ),
+                vf_kwargs=dict(
+                    sizes=[4, 8, 16, 16, 16]
+                ),
+            ),
+            n_steps=steps_per_rollout,
+            n_epochs=n_epochs,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+        )
+
+        super().__init__(path, HeatInvaderEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
