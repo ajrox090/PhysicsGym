@@ -82,6 +82,8 @@ class CNN_FUNNEL(torch.nn.Module):
 		while 2 ** num_levels < input_width:
 			num_levels += 1
 
+		print("sizes: {}".format(len(sizes)))
+		print("num_levels: {}".format(num_levels))
 		assert len(sizes) == num_levels
 
 		filter_counts = [input_shape[-1]] + sizes

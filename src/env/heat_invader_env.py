@@ -2,6 +2,7 @@ from typing import Tuple, Optional, List, Union, Any, Type
 
 import numpy as np
 import phi.flow as phiflow
+from matplotlib import pylab
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 from stable_baselines3.common.vec_env import VecEnv
 import gym
@@ -13,21 +14,23 @@ from src.visualization import LivePlotter, GifPlotter
 
 class HeatInvaderEnv(VecEnv):
 
-    def __init__(self, num_envs: int,
-                 step_count: int = 50,
+    def __init__(self,
+                 N,
+                 num_envs: int,
+                 step_count: int = 32,
                  diffusivity: int = 0.1,
                  dt: float = 0.03,
                  domain: phiflow.Domain = phiflow.Domain([50, ], box=phiflow.box[0:1]),
                  reward_rms: Optional[RunningMeanStd] = None,
-                 final_reward_factor: float = 50,
+                 final_reward_factor: float = 32,
                  exp_name: str = 'v0'):
         act_shape = self._get_act_shape(domain.resolution)
         obs_shape = self._get_obs_shape(domain.resolution)
-
         observation_space = gym.spaces.Box(-np.inf, np.inf, shape=obs_shape, dtype=np.float32)
         action_space = gym.spaces.Box(-np.inf, np.inf, shape=act_shape, dtype=np.float32)
-        super().__init__(num_envs, observation_space, action_space)
 
+        super().__init__(num_envs, observation_space, action_space)
+        self.N = N
         self.reward_range = (-float('inf'), float('inf'))
         self.step_count = step_count
         self.domain = domain
@@ -49,6 +52,8 @@ class HeatInvaderEnv(VecEnv):
         self.step_idx = 0
         self.test_mode = False
         self.ep_idx = 0
+        self.vis_list = []
+        self.temperature_gt = []
 
         self.lviz = None
         self.gifviz = None
@@ -56,10 +61,12 @@ class HeatInvaderEnv(VecEnv):
     def reset(self) -> VecEnvObs:
         self.step_idx = 0
 
-        self.init_state = self._get_init_state()
-        self.cont_state = self.init_state.copied_with()
         self.gt_forces = self._get_gt_forces()
+        self.init_state = self._get_init_state()
+        # self.show_state(self.init_state, 'Init State')
+        self.cont_state = self.init_state.copied_with()
         self.goal_state = self._get_goal_state()
+        # self.show_state(self.goal_state, 'Goal State')
 
         if self.test_mode:
             self._init_ref_states()
@@ -73,11 +80,16 @@ class HeatInvaderEnv(VecEnv):
         self.step_idx += 1
         forces = self.actions
         forces_effect = phiflow.FieldEffect(phiflow.CenteredGrid(self.actions, box=self.domain.box), ['temperature_effect'])
+        # forces_effect = phiflow.HeatSource(self.actions, rate=self.dt,
+        #                                     name='temperature_effect') # currently doesn't work, investigate.
         self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
+        self.vis_list.append(self.cont_state)
 
         # Perform reference simulation only when evaluating results -> after render was called once
+        self.render(mode='live')
         if self.test_mode:
             self.gt_state = self._step_gt()
+            self.temperature_gt.append(self.gt_state)
 
         obs = self._build_obs()
         rew = self._build_rew(forces)
@@ -117,7 +129,7 @@ class HeatInvaderEnv(VecEnv):
             if mode == 'live':
                 self.lviz = LivePlotter()
             elif mode == 'gif':
-                self.gifviz = GifPlotter('StableBurger-%s' % self.exp_name)
+                self.gifviz = GifPlotter('StableHeatDiffusion-%s' % self.exp_name)
             else:
                 raise NotImplementedError()
 
@@ -221,3 +233,52 @@ class HeatInvaderEnv(VecEnv):
         ]
 
         return fields, labels
+
+    def show_state(self, title='all temperatures flow'):
+        assert len(self.vis_list) > 0
+        vels = [v.temperature.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
+        vels_img = np.array(np.concatenate(vels, axis=1), dtype=np.float32)
+
+        # convert state's temperature data to an image
+        # state_img = np.asarray(np.concatenate(instate.temperature.data, axis=-1), dtype=np.float32)
+        # we only have 33 time steps, blow up by a factor of 2^4 to make it easier to see
+        # (could also be done with more evaluations of network)
+        state_img = np.expand_dims(vels_img, axis=2)
+        for i in range(4):
+            state_img = np.concatenate([state_img, state_img], axis=2)
+
+        state_img = np.reshape(state_img, [state_img.shape[0], state_img.shape[1] * state_img.shape[2]])
+        # print("Resulting image size" + format(state_img.shape))
+
+        fig, axes = pylab.subplots(1, 1, figsize=(16, 5))
+        im = axes.imshow(state_img, origin='upper', cmap='inferno')
+        pylab.colorbar(im)
+        pylab.xlabel('time')
+        pylab.ylabel('x')
+        pylab.title(title)
+        pylab.show()
+
+    def show_vels(self, title='state of all temperatures'):
+
+        assert len(self.vis_list) > 0
+        vels = [v.temperature.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
+        vels_gt = [v.temperature.data.reshape(self.N, 1) for v in self.temperature_gt]  # gives a list of 2D arrays
+        a1 = self.step_count // 3
+        a2 = self.step_count * 2 // 3
+
+        fig = pylab.figure().gca()
+        fig.plot(np.linspace(-1, 1, len(vels[0].flatten())),
+                 vels[0].flatten(), lw=2, color='blue', label="t=0")
+        fig.plot(np.linspace(-1, 1, len(vels[a1].flatten())), vels[a1].flatten(),
+                 lw=2, color='green', label="t=0.3125")
+        fig.plot(np.linspace(-1, 1, len(vels[a2].flatten())), vels[a2].flatten(),
+                 lw=2, color='cyan', label="t=0.625")
+        fig.plot(np.linspace(-1, 1, len(vels[self.step_count].flatten())), vels[self.step_count].flatten(),
+                 lw=2, color='purple', label="t=1")
+        fig.plot(np.linspace(-1, 1, len(vels_gt[self.step_count].flatten())), vels_gt[self.step_count].flatten(),
+                 lw=2, color='gray', label="gt=1")
+        pylab.xlabel('x')
+        pylab.ylabel('u')
+        pylab.legend()
+        pylab.title(title)
+        pylab.show()

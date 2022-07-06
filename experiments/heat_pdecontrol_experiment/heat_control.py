@@ -4,9 +4,10 @@ from src.experiment import HeatTrainingExper
 
 
 def main():
-    domain = Domain([32, ], box=box[0:1])
+    N = 32
+    domain = Domain([N], box=box[0:1])
     diffusivity = 0.01
-    step_count = 2
+    step_count = 11
     dt = 0.03
 
     n_envs = 1  # On how many environments to train in parallel, load balancing
@@ -17,6 +18,7 @@ def main():
     rl_batch_size = n_envs * step_count  # Batch size for agent updates
 
     rl_trainer = HeatTrainingExper(
+        N,
         path='networks/rl-models/time_bench',
         domain=domain,
         diffusivity=diffusivity,
@@ -31,7 +33,9 @@ def main():
     )
 
     rl_trainer.train(n_rollouts=2, save_freq=10)
-    rl_trainer.render_env(mode='live')
+    rl_trainer.show_state()
+    rl_trainer.show_vels()
+    rl_trainer.plot()
     plt.show()
 
 

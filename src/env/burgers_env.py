@@ -11,7 +11,7 @@ from stable_baselines3.common.running_mean_std import RunningMeanStd
 from stable_baselines3.common.vec_env.base_vec_env import VecEnvIndices, VecEnvStepReturn, VecEnvObs, VecEnv
 
 from src.util.burgers_util import GaussianClash, GaussianForce
-from src.visualization import LivePlotter
+from src.visualization import LivePlotter, GifPlotter
 
 
 class BurgersEnv(VecEnv):
@@ -38,7 +38,6 @@ class BurgersEnv(VecEnv):
         super().__init__(num_envs, observation_space, action_space)
         self.N = N
         self.reward_range = (-float('inf'), float('inf'))
-        # self.spec = None
         self.exp_name = exp_name
         self.domain = domain
         self.step_count = step_count
@@ -85,15 +84,14 @@ class BurgersEnv(VecEnv):
     def step_wait(self) -> VecEnvStepReturn:
         self.step_idx += 1
         forces = self.actions
-        forces_effect = phiflow.FieldEffect(phiflow.CenteredGrid(self.actions, box=self.domain.box), ['velocity'])
+        forces_effect = phiflow.FieldEffect(phiflow.CenteredGrid(self.actions, box=self.domain.box), ['velocity'],
+                                            mode=phiflow.GROW)
         self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
-        # self.cont_state = self._step_sim(self.cont_state, ())
         self.vis_list.append(self.cont_state)
 
         # Perform reference simulation only when evaluating results -> after render was called once
         self.render(mode='live')
         if self.test_mode:
-            # self.pass_state = self._step_sim(self.pass_state, ())
             self.gt_state = self._step_gt()
             self.vels_gt.append(self.gt_state)
 
@@ -134,6 +132,8 @@ class BurgersEnv(VecEnv):
             self._init_ref_states()
             if mode == 'live':
                 self.lviz = LivePlotter()
+            elif mode == 'gif':
+                self.gifviz = GifPlotter('StableBurger-%s' % self.exp_name)
             else:
                 raise NotImplementedError()
 

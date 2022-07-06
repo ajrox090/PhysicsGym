@@ -197,41 +197,22 @@ class BurgersTrainingExpr(Experiment):
             test_range=range(100),
     ):
         env_kwargs = dict(
-            N=N,
-            num_envs=n_envs,
-            step_count=step_count,
-            domain=domain,
-            dt=dt,
-            viscosity=viscosity,
-            diffusion_substeps=diffusion_substeps,
-            exp_name=path,
-        )
-
-        evaluation_env_kwargs = {k: env_kwargs[k] for k in env_kwargs if k != 'num_envs'}
+            N=N, num_envs=n_envs, step_count=step_count, domain=domain, dt=dt,
+            viscosity=viscosity, diffusion_substeps=diffusion_substeps, exp_name=path, )
+        # evaluation_env_kwargs = {k: env_kwargs[k] for k in env_kwargs if k != 'num_envs'}
 
         # Only add a fresh running mean to new experiments
-        if not ExperimentFolder.exists(path):
-            env_kwargs['reward_rms'] = RunningMeanStd()
-
-        agent_kwargs = dict(
-            verbose=0,
-            policy=CustomActorCriticPolicy,
-            policy_kwargs=dict(
-                pi_net=RES_UNET,
-                vf_net=CNN_FUNNEL,
-                vf_latent_dim=16,
-                pi_kwargs=dict(
-                    sizes=[4, 8, 16, 16, 16]
-                ),
-                vf_kwargs=dict(
-                    sizes=[4, 8, 16, 16, 16, 16, 16]
-                ),
-            ),
-            n_steps=steps_per_rollout,
-            n_epochs=n_epochs,
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-        )
+        if not ExperimentFolder.exists(path): env_kwargs['reward_rms'] = RunningMeanStd()
+        agent_kwargs = dict(verbose=0, policy=CustomActorCriticPolicy,
+                            policy_kwargs=dict(pi_net=RES_UNET, vf_net=CNN_FUNNEL, vf_latent_dim=16,
+                                               pi_kwargs=dict(
+                                                   sizes=[4, 8, 16, 16, 16]
+                                               ),
+                                               vf_kwargs=dict(
+                                                   sizes=[4, 8, 16, 16, 16, 16, 16]
+                                               ), ),
+                            n_steps=steps_per_rollout, n_epochs=n_epochs, learning_rate=learning_rate,
+                            batch_size=batch_size, )
 
         super().__init__(N, path, BurgersEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
 
@@ -239,6 +220,7 @@ class BurgersTrainingExpr(Experiment):
 class HeatTrainingExper(Experiment):
     def __init__(
             self,
+            N,
             path,
             domain,
             diffusivity,
@@ -254,6 +236,7 @@ class HeatTrainingExper(Experiment):
             test_range=range(100),
     ):
         env_kwargs = dict(
+            N=N,
             num_envs=n_envs,
             step_count=step_count,
             domain=domain,
@@ -279,7 +262,9 @@ class HeatTrainingExper(Experiment):
                     sizes=[4, 8, 16, 16, 16]
                 ),
                 vf_kwargs=dict(
-                    sizes=[4, 8, 16, 16, 16, 16, 16]
+                    # sizes=[4, 8, 16, 16, 16, 16, 16, 16, 16, 16]
+                    sizes=[4, 8, 16, 16, 16]
+                    # sizes=[4, 8, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16]
                 ),
             ),
             n_steps=steps_per_rollout,
@@ -288,4 +273,4 @@ class HeatTrainingExper(Experiment):
             batch_size=batch_size,
         )
 
-        super().__init__(path, HeatInvaderEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
+        super().__init__(N, path, HeatInvaderEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
