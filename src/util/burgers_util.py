@@ -3,7 +3,6 @@ from phi.flow import struct
 from phi.physics.field import AnalyticField
 
 
-
 @struct.definition()
 class GaussianClash(AnalyticField):
 

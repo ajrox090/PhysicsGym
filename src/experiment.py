@@ -8,15 +8,13 @@ import matplotlib.pyplot as plt
 from stable_baselines3.common.vec_env import VecEnv
 from stable_baselines3.ppo import PPO
 from stable_baselines3.common.running_mean_std import RunningMeanStd
-from stable_baselines3.common import logger
 
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 from src.env.burgers_env import BurgersEnv
-from src.env.heat_invader_env import HeatInvaderEnv
+from src.env.heat_env import HeatEnv
 
 from src.policy import CustomActorCriticPolicy
-from src.env.burgers_fixedset_env import BurgersFixedSetEnv
 from src.networks import RES_UNET, CNN_FUNNEL
 from src.vis.monitor_env import VecMonitor
 
@@ -50,7 +48,7 @@ class ExperimentFolder:
         agent.save(self.agent_path)
 
     def store(self, agent, env_kwargs, agent_kwargs):
-        print('Storing agent and hyperparameters to disk...')
+        print('Storing agent and hyper parameters to disk...')
         kwargs = self._group_kwargs(env_kwargs, agent_kwargs)
         agent.save(self.agent_path)
         with open(self.kwargs_path, 'wb') as kwargs_file:
@@ -58,7 +56,7 @@ class ExperimentFolder:
 
     def get(self, env_cls, env_kwargs, agent_kwargs):
         print('Tensorboard log path: %s' % self.tensorboard_path)
-        if not self.can_be_loaded:  # disabled temporariliy
+        if not self.can_be_loaded:  # disabled temporarily
             print('Loading existing agent from %s' % (self.agent_path + '.zip'))
             return self._load(env_cls, env_kwargs, agent_kwargs)
         else:
@@ -126,8 +124,8 @@ class ExperimentFolder:
 
     def _build_env(self, env_cls, env_kwargs, rollout_size):
         env = env_cls(**env_kwargs)
-        return VecMonitor(env, rollout_size, self.monitor_path, info_keywords=('rew_unnormalized', 'forces'))
-
+        # return VecMonitor(env, rollout_size, self.monitor_path, info_keywords=('rew_unnormalized', 'forces'))
+        return env
     @staticmethod
     def _group_kwargs(env_kwargs, agent_kwargs):
         return dict(
@@ -209,7 +207,7 @@ class BurgersTrainingExpr(Experiment):
                                                    sizes=[4, 8, 16, 16, 16]
                                                ),
                                                vf_kwargs=dict(
-                                                   sizes=[4, 8, 16, 16, 16, 16, 16]
+                                                   sizes=[4, 8, 16, 16, 16]
                                                ), ),
                             n_steps=steps_per_rollout, n_epochs=n_epochs, learning_rate=learning_rate,
                             batch_size=batch_size, )
@@ -223,7 +221,7 @@ class HeatTrainingExper(Experiment):
             N,
             path,
             domain,
-            diffusivity,
+            default_diffusivity,
             step_count,
             dt,
             n_envs,
@@ -241,7 +239,7 @@ class HeatTrainingExper(Experiment):
             step_count=step_count,
             domain=domain,
             dt=dt,
-            diffusivity=diffusivity,
+            default_diffusivity=default_diffusivity,
             exp_name=path,
         )
 
@@ -262,9 +260,7 @@ class HeatTrainingExper(Experiment):
                     sizes=[4, 8, 16, 16, 16]
                 ),
                 vf_kwargs=dict(
-                    # sizes=[4, 8, 16, 16, 16, 16, 16, 16, 16, 16]
                     sizes=[4, 8, 16, 16, 16]
-                    # sizes=[4, 8, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16]
                 ),
             ),
             n_steps=steps_per_rollout,
@@ -273,4 +269,4 @@ class HeatTrainingExper(Experiment):
             batch_size=batch_size,
         )
 
-        super().__init__(N, path, HeatInvaderEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
+        super().__init__(N, path, HeatEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)

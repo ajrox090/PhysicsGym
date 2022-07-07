@@ -1,8 +1,9 @@
+import random
 from typing import Tuple, Optional, List, Union, Any, Type
 
 import numpy as np
 import phi.flow as phiflow
-from matplotlib import pylab
+import matplotlib.pyplot as plt
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 from stable_baselines3.common.vec_env import VecEnv
 import gym
@@ -12,18 +13,19 @@ from src.util.heat_util import GaussianClash, GaussianForce
 from src.visualization import LivePlotter, GifPlotter
 
 
-class HeatInvaderEnv(VecEnv):
+class HeatEnv(VecEnv):
 
     def __init__(self,
                  N,
                  num_envs: int,
                  step_count: int = 32,
-                 diffusivity: int = 0.1,
+                 default_diffusivity: int = 0.1,
                  dt: float = 0.03,
                  domain: phiflow.Domain = phiflow.Domain([50, ], box=phiflow.box[0:1]),
                  reward_rms: Optional[RunningMeanStd] = None,
                  final_reward_factor: float = 32,
                  exp_name: str = 'v0'):
+
         act_shape = self._get_act_shape(domain.resolution)
         obs_shape = self._get_obs_shape(domain.resolution)
         observation_space = gym.spaces.Box(-np.inf, np.inf, shape=obs_shape, dtype=np.float32)
@@ -36,8 +38,8 @@ class HeatInvaderEnv(VecEnv):
         self.domain = domain
         self.exp_name = exp_name
         self.dt = dt
-        self.diffusivity = diffusivity
-        self.physics = phiflow.HeatDiffusion(diffusivity=diffusivity)
+        self.default_diffusivity = default_diffusivity
+        self.physics = phiflow.HeatDiffusion(default_diffusivity=default_diffusivity)
         self.reward_rms = reward_rms
         if self.reward_rms is None:
             self.reward_rms = RunningMeanStd()
@@ -53,7 +55,7 @@ class HeatInvaderEnv(VecEnv):
         self.test_mode = False
         self.ep_idx = 0
         self.vis_list = []
-        self.temperature_gt = []
+        self.temperature_goal_state = []
 
         self.lviz = None
         self.gifviz = None
@@ -89,7 +91,7 @@ class HeatInvaderEnv(VecEnv):
         self.render(mode='live')
         if self.test_mode:
             self.gt_state = self._step_gt()
-            self.temperature_gt.append(self.gt_state)
+            self.temperature_goal_state.append(self.goal_state)
 
         obs = self._build_obs()
         rew = self._build_rew(forces)
@@ -173,7 +175,7 @@ class HeatInvaderEnv(VecEnv):
 
     def _get_init_state(self) -> phiflow.HeatTemperature:
         return phiflow.HeatTemperature(domain=self.domain, temperature=GaussianClash(self.num_envs),
-                                       diffusivity=self.diffusivity)
+                                       diffusivity=self.default_diffusivity)
 
     def _get_gt_forces(self) -> phiflow.FieldEffect:
         return phiflow.FieldEffect(GaussianForce(self.num_envs), ['temperature'])
@@ -250,35 +252,42 @@ class HeatInvaderEnv(VecEnv):
         state_img = np.reshape(state_img, [state_img.shape[0], state_img.shape[1] * state_img.shape[2]])
         # print("Resulting image size" + format(state_img.shape))
 
-        fig, axes = pylab.subplots(1, 1, figsize=(16, 5))
+        fig, axes = plt.subplots(1, 1, figsize=(16, 5))
         im = axes.imshow(state_img, origin='upper', cmap='inferno')
-        pylab.colorbar(im)
-        pylab.xlabel('time')
-        pylab.ylabel('x')
-        pylab.title(title)
-        pylab.show()
+        plt.colorbar(im)
+        plt.xlabel('time')
+        plt.ylabel('x')
+        plt.title(title)
+        plt.show()
 
     def show_vels(self, title='state of all temperatures'):
 
-        assert len(self.vis_list) > 0
+        assert len(self.temperature_goal_state) > 0
         vels = [v.temperature.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
-        vels_gt = [v.temperature.data.reshape(self.N, 1) for v in self.temperature_gt]  # gives a list of 2D arrays
-        a1 = self.step_count // 3
-        a2 = self.step_count * 2 // 3
+        vels_goal = [v.temperature.data.reshape(self.N, 1) for v in self.temperature_goal_state]  # gives a list of 2D arrays
+        fig = plt.figure().gca()
+        cmap = plt.cm.get_cmap('hsv', self.step_count)  # list 1D
 
-        fig = pylab.figure().gca()
-        fig.plot(np.linspace(-1, 1, len(vels[0].flatten())),
-                 vels[0].flatten(), lw=2, color='blue', label="t=0")
-        fig.plot(np.linspace(-1, 1, len(vels[a1].flatten())), vels[a1].flatten(),
-                 lw=2, color='green', label="t=0.3125")
-        fig.plot(np.linspace(-1, 1, len(vels[a2].flatten())), vels[a2].flatten(),
-                 lw=2, color='cyan', label="t=0.625")
-        fig.plot(np.linspace(-1, 1, len(vels[self.step_count].flatten())), vels[self.step_count].flatten(),
-                 lw=2, color='purple', label="t=1")
-        fig.plot(np.linspace(-1, 1, len(vels_gt[self.step_count].flatten())), vels_gt[self.step_count].flatten(),
-                 lw=2, color='gray', label="gt=1")
-        pylab.xlabel('x')
-        pylab.ylabel('u')
-        pylab.legend()
-        pylab.title(title)
-        pylab.show()
+        def random_int():
+            return random.randint(0, 100)
+
+        color = random_int()
+        label = "t"
+        for i in range(self.step_count):
+            a1 = self.step_count // 3
+            a2 = (self.step_count * 2) // 3
+            # choose random colors for each 1/3 of step_count
+            if (i % a1 == 0) or (i % a2 == 0):
+                label = "t" + str(i)
+                color = cmap(random_int())
+
+            fig.plot(np.linspace(-1, 1, len(vels[i].flatten())), vels[i].flatten(),
+                     lw=1, color=color, label=label if (i % a1 == 0) or (i % a2 == 0) else "")
+        fig.plot(np.linspace(-1, 1, len(vels_goal[self.step_count].flatten())), vels_goal[self.step_count].flatten(),
+                 lw=2, color='gray', label="goal_state")
+
+        plt.xlabel('x')
+        plt.ylabel('u')
+        plt.legend()
+        plt.title(title)
+        plt.show()

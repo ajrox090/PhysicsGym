@@ -1,10 +1,12 @@
+import random
 import sys
 
 import numpy as np
 from typing import Tuple, List, Optional, Union, Any, Type
 
 import phi.flow as phiflow
-from matplotlib import pylab
+# from matplotlib import pylab
+import matplotlib.pyplot as plt
 from phi.physics.burgers import Burgers
 import gym
 from stable_baselines3.common.running_mean_std import RunningMeanStd
@@ -61,7 +63,7 @@ class BurgersEnv(VecEnv):
         self.gifviz = None
         self.pngviz = None
         self.vis_list = []
-        self.vels_gt = []
+        self.vels_goal_state = []
 
     def reset(self) -> VecEnvObs:
         self.step_idx = 0
@@ -93,7 +95,7 @@ class BurgersEnv(VecEnv):
         self.render(mode='live')
         if self.test_mode:
             self.gt_state = self._step_gt()
-            self.vels_gt.append(self.gt_state)
+            self.vels_goal_state.append(self.goal_state)
 
         obs = self._build_obs()
         rew = self._build_rew(forces)
@@ -149,7 +151,7 @@ class BurgersEnv(VecEnv):
             raise NotImplementedError()
 
     def seed(self, seed: Optional[int] = None) -> List[Union[None, int]]:
-        return [None for _ in range(self.num_envs)]
+        return [42 for _ in range(self.num_envs)]
 
     def get_attr(self, attr_name: str, indices: VecEnvIndices = None):
         return [getattr(self, attr_name) for _ in self._vec_env_indices_to_list(indices)]
@@ -256,35 +258,42 @@ class BurgersEnv(VecEnv):
         state_img = np.reshape(state_img, [state_img.shape[0], state_img.shape[1] * state_img.shape[2]])
         # print("Resulting image size" + format(state_img.shape))
 
-        fig, axes = pylab.subplots(1, 1, figsize=(16, 5))
+        fig, axes = plt.subplots(1, 1, figsize=(16, 5))
         im = axes.imshow(state_img, origin='upper', cmap='inferno')
-        pylab.colorbar(im)
-        pylab.xlabel('time')
-        pylab.ylabel('x')
-        pylab.title(title)
-        pylab.show()
+        plt.colorbar(im)
+        plt.xlabel('time')
+        plt.ylabel('x')
+        plt.title(title)
+        plt.show()
 
     def show_vels(self, title='state of all velocities'):
 
-        assert len(self.vis_list) > 0
+        assert len(self.vels_goal_state) > 0
         vels = [v.velocity.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
-        vels_gt = [v.velocity.data.reshape(self.N, 1) for v in self.vels_gt]  # gives a list of 2D arrays
-        a1 = self.step_count // 3
-        a2 = self.step_count * 2 // 3
+        vels_goal = [v.velocity.data.reshape(self.N, 1) for v in self.vels_goal_state]  # gives a list of 2D arrays
+        fig = plt.figure().gca()
+        cmap = plt.cm.get_cmap('hsv', self.step_count)  # list 1D
 
-        fig = pylab.figure().gca()
-        fig.plot(np.linspace(-1, 1, len(vels[0].flatten())),
-                 vels[0].flatten(), lw=2, color='blue', label="t=0")
-        fig.plot(np.linspace(-1, 1, len(vels[a1].flatten())), vels[a1].flatten(),
-                 lw=2, color='green', label="t=0.3125")
-        fig.plot(np.linspace(-1, 1, len(vels[a2].flatten())), vels[a2].flatten(),
-                 lw=2, color='cyan', label="t=0.625")
-        fig.plot(np.linspace(-1, 1, len(vels[self.step_count].flatten())), vels[self.step_count].flatten(),
-                 lw=2, color='purple', label="t=1")
-        fig.plot(np.linspace(-1, 1, len(vels_gt[self.step_count].flatten())), vels_gt[self.step_count].flatten(),
-                 lw=2, color='gray', label="gt=1")
-        pylab.xlabel('x')
-        pylab.ylabel('u')
-        pylab.legend()
-        pylab.title(title)
-        pylab.show()
+        def random_int():
+            return random.randint(0, 100)
+
+        color = random_int()
+        label = "t"
+        for i in range(self.step_count):
+            a1 = self.step_count // 3
+            a2 = (self.step_count * 2) // 3
+            # choose random colors for each 1/3 of step_count
+            if (i % a1 == 0) or (i % a2 == 0):
+                label = "t" + str(i)
+                color = cmap(random_int())
+
+            fig.plot(np.linspace(-1, 1, len(vels[i].flatten())), vels[i].flatten(),
+                     lw=1, color=color, label=label if (i % a1 == 0) or (i % a2 == 0) else "")
+        fig.plot(np.linspace(-1, 1, len(vels_goal[self.step_count].flatten())), vels_goal[self.step_count].flatten(),
+                 lw=2, color='gray', label="goal_state")
+
+        plt.xlabel('x')
+        plt.ylabel('u')
+        plt.legend()
+        plt.title(title)
+        plt.show()
