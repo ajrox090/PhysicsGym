@@ -1,22 +1,21 @@
-import math
 import os
 import pickle
 
+import gym
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from stable_baselines3.common.vec_env import VecEnv
 from stable_baselines3.ppo import PPO
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-from src.env.burgers_env import BurgersEnv
+from src.env.burgers_env_gym import BurgersEnvGym
+from src.env.burgers_fixedset_env_gym import BurgersFixedSetEnvGym
 from src.env.heat_env import HeatEnv
 
 from src.policy import CustomActorCriticPolicy
 from src.networks import RES_UNET, CNN_FUNNEL
-from src.vis.monitor_env import VecMonitor
 
 
 class ExperimentFolder:
@@ -124,8 +123,8 @@ class ExperimentFolder:
 
     def _build_env(self, env_cls, env_kwargs, rollout_size):
         env = env_cls(**env_kwargs)
-        # return VecMonitor(env, rollout_size, self.monitor_path, info_keywords=('rew_unnormalized', 'forces'))
         return env
+
     @staticmethod
     def _group_kwargs(env_kwargs, agent_kwargs):
         return dict(
@@ -155,7 +154,7 @@ class Experiment:
         return plt.plot(avg_rew)
 
     def show_state(self):
-        self.env.show_state()
+        self.env.show_state_cmap()
 
     def show_vels(self):
         self.env.show_vels()
@@ -171,7 +170,7 @@ class Experiment:
         return self.env.step_wait()
 
     def render_env(self, mode: str):
-        assert isinstance(self.env, VecEnv)
+        assert isinstance(self.env, gym.Env)
         self.env.render(mode=mode)
 
 
@@ -197,7 +196,21 @@ class BurgersTrainingExpr(Experiment):
         env_kwargs = dict(
             N=N, num_envs=n_envs, step_count=step_count, domain=domain, dt=dt,
             viscosity=viscosity, diffusion_substeps=diffusion_substeps, exp_name=path, )
-        # evaluation_env_kwargs = {k: env_kwargs[k] for k in env_kwargs if k != 'num_envs'}
+        evaluation_env_kwargs = {k: env_kwargs[k] for k in env_kwargs if k != 'num_envs'}
+
+        if data_path is not None:
+            self.val_env = BurgersFixedSetEnvGym(
+                data_path=data_path,
+                data_range=val_range,
+                num_envs=len(val_range),
+                **evaluation_env_kwargs
+            )
+            self.test_env = BurgersFixedSetEnvGym(
+                data_path=data_path,
+                data_range=test_range,
+                num_envs=len(test_range),
+                **evaluation_env_kwargs
+            )
 
         # Only add a fresh running mean to new experiments
         if not ExperimentFolder.exists(path): env_kwargs['reward_rms'] = RunningMeanStd()
@@ -212,7 +225,68 @@ class BurgersTrainingExpr(Experiment):
                             n_steps=steps_per_rollout, n_epochs=n_epochs, learning_rate=learning_rate,
                             batch_size=batch_size, )
 
-        super().__init__(N, path, BurgersEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
+        super().__init__(N, path, BurgersEnvGym, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
+
+    def infer_test_set_forces(self):
+        return self._infer_forces(self.test_env)
+
+    def infer_test_set_frames(self):
+        return self._infer_frames(self.test_env)
+
+    def get_val_set_forces_data(self):
+        wall_times, timesteps, forces = self.folder.get_tensorboard_scalar('val_set_forces')
+        iterations = [i for i in range(len(timesteps))]
+        return wall_times, iterations, forces
+
+    def _infer_forces(self, env: BurgersFixedSetEnvGym):
+        self.agent.set_env(env)
+
+        obs = env.reset()
+        done = False
+        forces = np.zeros((env.num_envs,), dtype=np.float32)
+
+        i = 0
+
+        while not done:
+            i += 1
+            act = self.predict(obs, False)
+            obs, _, dones, infos = env.step(act)
+            done = dones[0]
+            forces += [infos[i]['forces'] for i in range(len(infos))]
+
+        self.agent.set_env(self.env)
+
+        return forces
+
+    def _infer_frames(self, env: BurgersFixedSetEnvGym):
+        self.agent.set_env(env)
+
+        obs = np.array(env.reset())
+        init = obs[:, :, 0]
+        goal = obs[:, :, 1]
+        gt_frames = env.frames
+        cont_frames = [init]
+        pass_frames = [init]  # without any effects or forces
+
+        pass_state = env._get_init_state()
+
+        done = False
+        infos = []
+
+        while not done:
+            act = self.predict(obs)
+            obs, _, dones, infos = env.step(act)
+            pass_state = env._step_sim(pass_state, ())
+            pass_frames.append(pass_state.velocity.data)
+            done = dones[0]
+            if not done:
+                cont_frames.append(np.array(obs)[:, :, 0])
+
+        cont_frames.append(goal)
+
+        self.agent.set_env(self.env)
+
+        return cont_frames, gt_frames, pass_frames
 
 
 class HeatTrainingExper(Experiment):

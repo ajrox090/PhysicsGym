@@ -108,15 +108,19 @@ class LivePlotter(LiveViz):
         self.plots = None
 
     def render(self, fields, labels, max_value, signed):
-        if self.fig is None:
-            plt.ion()
-            self.fig, self.plots = plot_fields(fields, labels, max_value, signed)
-        else:
-            for i in range(len(self.plots)):
-                self.plots[i].set_ydata(fields[i])
+        plt.ion()
+        self.fig, self.plots = plot_fields(fields, labels, max_value, signed)
+        # if self.fig is None:
+        #     plt.ion()
+        #     self.fig, self.plots = plot_fields(fields, labels, max_value, signed)
+        # else:
+        #     for i in range(len(self.plots)):
+        #         self.plots[i].set_ydata(fields[i])
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+        plt.show()
+
 
 class GifPlotter(FileViz):
     def __init__(self, category_name):

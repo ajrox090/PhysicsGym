@@ -1,5 +1,6 @@
 import unittest
 
+import matplotlib.pyplot as plt
 from phi.flow import *
 
 from src.experiment import BurgersTrainingExpr
@@ -41,6 +42,8 @@ class MyTestCase(unittest.TestCase):
         rl_trainer = setup_rltrainer()
 
         rl_trainer.train(n_rollouts=2, save_freq=10)
+        # rl_trainer.render_env(mode='live')
+        # plt.show()
         rl_trainer.show_vels()
 
 
