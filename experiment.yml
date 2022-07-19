@@ -1,0 +1,13 @@
+env:
+  N: 128
+  num_envs: 1
+  step_count: 32
+#  viscosity: auto
+  diffusion_substeps: 1
+  final_reward_factor: 32
+  exp_name: 'v0'
+
+agent:
+  num_epochs: 100
+  lr: 0.0001
+  batch_size: 32

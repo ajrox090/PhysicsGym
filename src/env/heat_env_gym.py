@@ -1,94 +1,90 @@
 import random
-from typing import Tuple, Optional, List, Union, Any, Type
+from typing import Tuple, Optional, List, Union, Any, Type, Dict
 
+import gym
 import numpy as np
 import phi.flow as phiflow
 import matplotlib.pyplot as plt
 from stable_baselines3.common.running_mean_std import RunningMeanStd
-from stable_baselines3.common.vec_env import VecEnv
-import gym
-from stable_baselines3.common.vec_env.base_vec_env import VecEnvObs, VecEnvStepReturn, VecEnvIndices
-from phi.physics.heat import HeatDiffusion
+
 from src.util.heat_util import GaussianClash, GaussianForce
 from src.visualization import LivePlotter, GifPlotter
 
+GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
-class HeatEnv(VecEnv):
 
+class HeatEnvGym(gym.Env):
     def __init__(self,
                  N,
                  num_envs: int,
                  step_count: int = 32,
-                 default_diffusivity: int = 0.1,
-                 dt: float = 0.03,
                  domain: phiflow.Domain = phiflow.Domain([50, ], box=phiflow.box[0:1]),
-                 reward_rms: Optional[RunningMeanStd] = None,
+                 dt: float = 0.03,
+                 default_diffusivity: int = 0.1,
                  final_reward_factor: float = 32,
+                 reward_rms: Optional[RunningMeanStd] = None,
                  exp_name: str = 'v0'):
+        super(HeatEnvGym, self).__init__()
 
         act_shape = self._get_act_shape(domain.resolution)
         obs_shape = self._get_obs_shape(domain.resolution)
-        observation_space = gym.spaces.Box(-np.inf, np.inf, shape=obs_shape, dtype=np.float32)
-        action_space = gym.spaces.Box(-np.inf, np.inf, shape=act_shape, dtype=np.float32)
+        self.observation_space = gym.spaces.Box(-np.inf, np.inf, shape=obs_shape, dtype=np.float32)
+        self.action_space = gym.spaces.Box(-np.inf, np.inf, shape=act_shape, dtype=np.float32)
 
-        super().__init__(num_envs, observation_space, action_space)
         self.N = N
+        self.num_envs = num_envs
         self.reward_range = (-float('inf'), float('inf'))
-        self.step_count = step_count
-        self.domain = domain
         self.exp_name = exp_name
+        self.domain = domain
+        self.step_count = step_count
+        self.step_idx = 0
+        self.ep_idx = 0
         self.dt = dt
         self.default_diffusivity = default_diffusivity
         self.physics = phiflow.HeatDiffusion(default_diffusivity=default_diffusivity)
+        self.final_reward_factor = final_reward_factor
         self.reward_rms = reward_rms
         if self.reward_rms is None:
             self.reward_rms = RunningMeanStd()
-        self.final_reward_factor = final_reward_factor
-
+        self.actions = None
+        self.test_mode = False
         self.init_state = None
         self.goal_state = None
         self.cont_state = None
         self.gt_state = None
         self.gt_forces = None
-        self.actions = None
-        self.step_idx = 0
-        self.test_mode = False
-        self.ep_idx = 0
+        self.lviz = None
+        self.gifviz = None
+        self.pngviz = None
         self.vis_list = []
         self.temperature_goal_state = []
 
-        self.lviz = None
-        self.gifviz = None
-
-    def reset(self) -> VecEnvObs:
+    def reset(self) -> GymEnvObs:
         self.step_idx = 0
 
         self.gt_forces = self._get_gt_forces()
         self.init_state = self._get_init_state()
-        # self.show_state(self.init_state, 'Init State')
         self.cont_state = self.init_state.copied_with()
         self.goal_state = self._get_goal_state()
-        # self.show_state(self.goal_state, 'Goal State')
 
         if self.test_mode:
             self._init_ref_states()
 
         return self._build_obs()
 
-    def step_async(self, actions: np.ndarray) -> None:
+    def step(self, actions: np.ndarray):
         self.actions = actions.reshape(self.cont_state.temperature.data.shape)
-
-    def step_wait(self) -> VecEnvStepReturn:
         self.step_idx += 1
         forces = self.actions
-        forces_effect = phiflow.FieldEffect(phiflow.CenteredGrid(self.actions, box=self.domain.box), ['temperature_effect'])
+        forces_effect = phiflow.FieldEffect(phiflow.CenteredGrid(self.actions, box=self.domain.box),
+                                            ['temperature_effect'], mode=phiflow.GROW)
         # forces_effect = phiflow.HeatSource(self.actions, rate=self.dt,
         #                                     name='temperature_effect') # currently doesn't work, investigate.
         self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
         self.vis_list.append(self.cont_state)
 
-        # Perform reference simulation only when evaluating results -> after render was called once
         self.render(mode='live')
+        # Perform reference simulation only when evaluating results -> after render was called once
         if self.test_mode:
             self.gt_state = self._step_gt()
             self.temperature_goal_state.append(self.goal_state)
@@ -111,25 +107,21 @@ class HeatEnv(VecEnv):
 
             obs = self.reset()
 
-        info = [{'rew_unnormalized': rew[i], 'forces': np.abs(forces[i]).sum()} for i in range(self.num_envs)]
+        info = {'rew_unnormalized': rew, 'forces': np.abs(forces).sum()}
 
         self.reward_rms.update(rew)
         rew = (rew - self.reward_rms.mean) / np.sqrt(self.reward_rms.var)
 
-        return obs, rew, done, info
-
-    def close(self) -> None:
-        pass
-
-    def disable_test_mode_wtf(self):
-        self.test_mode = False
+        # reward should be a single value not a list since it is just a single step in time.
+        assert len(rew) == 1
+        return obs, rew[0], done, info
 
     def render(self, mode: str = 'live') -> None:
         if not self.test_mode:
             self.test_mode = True
             self._init_ref_states()
             if mode == 'live':
-                self.lviz = LivePlotter()
+                self.lviz = LivePlotter("plots2/")
             elif mode == 'gif':
                 self.gifviz = GifPlotter('StableHeatDiffusion-%s' % self.exp_name)
             else:
@@ -142,23 +134,10 @@ class HeatEnv(VecEnv):
         elif mode == 'gif':
             self.gifviz.render(fields, labels, 2, True, 'Temperature', self.ep_idx, self.step_idx, self.step_count,
                                True)
+        elif mode == 'png':
+            self.pngviz.render(fields, labels, 2, True, 'Velocity', self.ep_idx, self.step_idx, self.step_count, True)
         else:
             raise NotImplementedError()
-
-    def seed(self, seed: Optional[int] = None) -> List[Union[None, int]]:
-        return [None for _ in range(self.num_envs)]
-
-    def get_attr(self, attr_name: str, indices: VecEnvIndices = None):
-        return [getattr(self, attr_name) for _ in self._vec_env_indices_to_list(indices)]
-
-    def set_attr(self, attr_name: str, value: Any, indices: VecEnvIndices = None):
-        setattr(self, attr_name, value)
-
-    def env_method(self, method_name: str, *method_args, indices: VecEnvIndices = None, **method_kwargs) -> List[Any]:
-        getattr(self, method_name)(*method_args, **method_kwargs)
-
-    def env_is_wrapped(self, wrapper_class: Type[gym.Wrapper], indices: VecEnvIndices = None) -> List[bool]:
-        return [False for _ in self._vec_env_indices_to_list(indices)]
 
     def _step_sim(self, temperature: phiflow.HeatTemperature,
                   effects: Tuple[phiflow.FieldEffect, ...]) -> phiflow.HeatTemperature:
@@ -167,15 +146,15 @@ class HeatEnv(VecEnv):
     def _step_gt(self):
         return self._step_sim(self.gt_state, (self.gt_forces,))
 
+    def _get_init_state(self) -> phiflow.HeatTemperature:
+        return phiflow.HeatTemperature(domain=self.domain, temperature=GaussianClash(self.num_envs),
+                                       diffusivity=self.default_diffusivity)
+
     def _get_goal_state(self) -> phiflow.HeatTemperature:
         state = self.init_state.copied_with()
         for _ in range(self.step_count):
             state = self._step_sim(state, (self.gt_forces,))
         return state
-
-    def _get_init_state(self) -> phiflow.HeatTemperature:
-        return phiflow.HeatTemperature(domain=self.domain, temperature=GaussianClash(self.num_envs),
-                                       diffusivity=self.default_diffusivity)
 
     def _get_gt_forces(self) -> phiflow.FieldEffect:
         return phiflow.FieldEffect(GaussianForce(self.num_envs), ['temperature'])
@@ -193,10 +172,11 @@ class HeatEnv(VecEnv):
         # Channels last
         return np.array([np.concatenate(obs + (time_data,), axis=-1) for obs in zip(curr_data, goal_data)])
 
-    @staticmethod
-    def _build_rew(forces: np.ndarray) -> np.ndarray:
+    def _build_rew(self, forces: np.ndarray) -> np.ndarray:
         reduced_shape = (forces.shape[0], -1)
         reshaped_forces = forces.reshape(reduced_shape)
+        # reduced_shape_forces = (self.goal_state.temperature.data.shape[0], -1)
+        # reduced_gt_forces = self.goal_state.temperature.data.reshape(reduced_shape_forces)
         return -np.sum(reshaped_forces ** 2, axis=-1)
 
     # The whole field with one parameter in each direction, flattened out
@@ -209,14 +189,6 @@ class HeatEnv(VecEnv):
     @staticmethod
     def _get_obs_shape(field_shape: Tuple[int, ...]) -> Tuple[int, ...]:
         return tuple(field_shape) + (2 * len(field_shape) + 1,)
-
-    @staticmethod
-    def _vec_env_indices_to_list(raw_indices: VecEnvIndices) -> List[int]:
-        if raw_indices is None:
-            return []
-        if isinstance(raw_indices, int):
-            return [raw_indices]
-        return list(raw_indices)
 
     def _get_fields_and_labels(self) -> Tuple[List[np.ndarray], List[str]]:
         # Take the simulation of the first env
@@ -264,7 +236,8 @@ class HeatEnv(VecEnv):
 
         assert len(self.temperature_goal_state) > 0
         vels = [v.temperature.data.reshape(self.N, 1) for v in self.vis_list]  # gives a list of 2D arrays
-        vels_goal = [v.temperature.data.reshape(self.N, 1) for v in self.temperature_goal_state]  # gives a list of 2D arrays
+        vels_goal = [v.temperature.data.reshape(self.N, 1) for v in
+                     self.temperature_goal_state]  # gives a list of 2D arrays
         fig = plt.figure().gca()
         cmap = plt.cm.get_cmap('hsv', self.step_count)  # list 1D
 

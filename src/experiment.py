@@ -12,7 +12,7 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 
 from src.env.burgers_env_gym import BurgersEnvGym
 from src.env.burgers_fixedset_env_gym import BurgersFixedSetEnvGym
-from src.env.heat_env import HeatEnv
+from src.env.heat_env_gym import HeatEnvGym
 
 from src.policy import CustomActorCriticPolicy
 from src.networks import RES_UNET, CNN_FUNNEL
@@ -343,4 +343,4 @@ class HeatTrainingExper(Experiment):
             batch_size=batch_size,
         )
 
-        super().__init__(N, path, HeatEnv, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)
+        super().__init__(N, path, HeatEnvGym, env_kwargs, agent_kwargs, steps_per_rollout, n_envs)

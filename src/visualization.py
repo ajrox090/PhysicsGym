@@ -102,12 +102,15 @@ class FileViz:
 
 
 class LivePlotter(LiveViz):
-    def __init__(self):
+    def __init__(self, path):
         super().__init__()
         self.fig = None
         self.plots = None
+        self.figpath = path
+        if not os.path.exists(path):
+            os.mkdir(self.figpath)
 
-    def render(self, fields, labels, max_value, signed):
+    def render(self, fields, labels, max_value, signed, step_idx=0):
         plt.ion()
         self.fig, self.plots = plot_fields(fields, labels, max_value, signed)
         # if self.fig is None:
@@ -119,6 +122,8 @@ class LivePlotter(LiveViz):
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+        time_str = "{}t{}".format(self.figpath, step_idx)
+        plt.savefig(time_str)
         plt.show()
 
 
