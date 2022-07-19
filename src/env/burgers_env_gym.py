@@ -1,17 +1,16 @@
-
 import gym
 import numpy as np
 import phi.math
-from phi import math
 from phi.geom import Box
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from phi.math import extrapolation, instance, channel
 from phi.field import Field, CenteredGrid
 from phi.physics._effect import FieldEffect, GROW
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from src.env.phiflow.burgers import Burgers
-from src.util.burgers_util import _get_obs_shape, _get_act_shape, _build_rew
+from src.util.burgers_util import _get_obs_shape, _get_act_shape, _build_rew, SimpleGaussian, GaussianForce
+from src.visualization import LivePlotter
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
@@ -33,9 +32,10 @@ class BurgersEnvGym(gym.Env):
         if domain_dict is None:
             domain_dict = dict(extrapolation.PERIODIC, x=64, y=64, bounds=Box(x=200, y=100))
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, dtype=np.float32,
-                                                shape=_get_obs_shape(tuple([domain_dict['x'], domain_dict['y']])))
+                                                shape=_get_obs_shape(tuple([domain_dict['x']])))  # , domain_dict[
+        # 'y']])))
         self.action_space = gym.spaces.Box(low=0, high=255, dtype=np.float32,
-                                           shape=_get_act_shape(tuple([domain_dict['x'], domain_dict['y']])))
+                                           shape=_get_act_shape(tuple([domain_dict['x']])))  # , domain_dict['y']])))
 
         self.N = N
         self.num_envs = num_envs
@@ -82,6 +82,7 @@ class BurgersEnvGym(gym.Env):
                                     mode=GROW)
         self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
 
+        self.render()
         # Perform reference simulation only when evaluating results -> after render was called once
         if self.test_mode:
             self.gt_state = self._step_gt()
@@ -98,7 +99,24 @@ class BurgersEnvGym(gym.Env):
         return obs, np.sum(rew, axis=0), done, info
 
     def render(self, mode: str = 'live') -> None:
-        pass
+        if not self.test_mode:
+            self.test_mode = True
+            self._init_ref_states()
+            if mode == 'live':
+                self.lviz = LivePlotter("plots/")
+            else:
+                raise NotImplementedError()
+
+        fields, labels = self._get_fields_and_labels()
+
+        if mode == 'live':
+            self.lviz.render(fields, labels, 2, True)
+        elif mode == 'gif':
+            self.gifviz.render(fields, labels, 2, True, 'Velocity', self.ep_idx, self.step_idx, self.step_count, True)
+        elif mode == 'png':
+            self.pngviz.render(fields, labels, 2, True, 'Velocity', self.ep_idx, self.step_idx, self.step_count, True)
+        else:
+            raise NotImplementedError()
 
     def _build_obs(self) -> np.ndarray:
         curr_data = self.cont_state.points._native
@@ -117,10 +135,10 @@ class BurgersEnvGym(gym.Env):
         return self._step_sim(self.gt_state, (self.gt_forces,))
 
     def _get_init_state(self) -> Field:
-        return CenteredGrid(lambda x: math.sin(x), **self.domain_dict)
+        return CenteredGrid(SimpleGaussian, **self.domain_dict)
 
     def _get_gt_forces(self) -> FieldEffect:
-        return FieldEffect(CenteredGrid(lambda x: (math.cos(x) + math.sin(x)), **self.domain_dict), ['velocity'])
+        return FieldEffect(CenteredGrid(GaussianForce, **self.domain_dict), ['velocity'])
 
     def _get_goal_state(self) -> Field:
         state = self.init_state
@@ -130,3 +148,21 @@ class BurgersEnvGym(gym.Env):
 
     def _init_ref_states(self) -> None:
         self.gt_state = self.init_state
+
+    def _get_fields_and_labels(self) -> Tuple[List[np.ndarray], List[str]]:
+        # Take the simulation of the first env
+        fields = [f.values._native.reshape(-1) for f in [
+            self.init_state,
+            self.goal_state,
+            self.gt_state,
+            self.cont_state,
+        ]]
+
+        labels = [
+            'Initial state',
+            'Goal state',
+            'Ground truth simulation',
+            'Controlled simulation',
+        ]
+
+        return fields, labels

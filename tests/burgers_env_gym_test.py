@@ -15,7 +15,7 @@ runner = RLRunner(path_config="../experiment.yml")
 N = runner.config['env']['N']
 num_envs = runner.config['env']['num_envs']
 step_count = runner.config['env']['step_count']
-domain_dict = dict(x=80, y=64)
+domain_dict = dict(x=32, bounds=Box[0:1])  # , extrapolation=extrapolation.PERIODIC)
 dt = 1. / step_count
 viscosity = 0.01 / (N * np.pi)
 if 'viscosity' in runner.config['env'].keys():
@@ -43,14 +43,18 @@ agent = PPO(env=env, **agent_krargs)
 assert agent is not None
 
 print("training begin")
-# agent.learn(total_timesteps=32)
+agent.learn(total_timesteps=32)
+print("training complete")
+
 obs = env.reset()
-obs2 = obs[:, :, :2]
+# obs2 = obs[:, :, :2] # 2D
+obs2 = obs[:, :1]  # 1D
+curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
+vis.plot(curr_state)
+vis.show()
 curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
 
-for _ in view(play=True, namespace=globals()).range():
-    obs2 = obs[:, :, :2]
+for i in view(play=True, namespace=globals()).range(32):
     curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
     act = agent.predict(obs)[0]
     obs, reward, done, info = env.step(act)
-print("training complete")
