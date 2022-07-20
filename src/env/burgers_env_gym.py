@@ -78,10 +78,8 @@ class BurgersEnvGym(gym.Env):
         actions_tensor = phi.math.tensor(self.actions, self.cont_state.shape)
         self.step_idx += 1
         forces = self.actions
-        forces_effect = FieldEffect(CenteredGrid(actions_tensor, **self.domain_dict), ['velocity'],
-                                    mode=GROW)
+        forces_effect = FieldEffect(CenteredGrid(actions_tensor, **self.domain_dict), ['velocity'])
         self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
-
         self.render()
         # Perform reference simulation only when evaluating results -> after render was called once
         if self.test_mode:
@@ -90,6 +88,20 @@ class BurgersEnvGym(gym.Env):
         obs = self._build_obs()
         rew = _build_rew(forces)
         done = np.full((self.num_envs,), self.step_idx == self.step_count)
+        if self.step_idx == self.step_count:
+            self.ep_idx += 1
+
+            missing_forces_field = (self.goal_state.points._native - self.cont_state.points._native) / self.dt
+            missing_forces_field_tensor = phi.math.tensor(missing_forces_field, self.cont_state.shape)
+            missing_forces = FieldEffect(CenteredGrid(missing_forces_field_tensor, **self.domain_dict),
+                                                 ['velocity'])
+            forces += missing_forces_field
+            self.cont_state = self.cont_state.points._native + missing_forces_field * self.dt
+
+            add_rew = _build_rew(missing_forces.field.points._native) * self.final_reward_factor
+            rew += add_rew
+
+            obs = self.reset()
         # normalize reward
         self.reward_rms.update(rew)
         rew = (rew - self.reward_rms.mean) / np.sqrt(self.reward_rms.var)
