@@ -15,7 +15,7 @@ runner = RLRunner(path_config="../experiment.yml")
 N = runner.config['env']['N']
 num_envs = runner.config['env']['num_envs']
 step_count = runner.config['env']['step_count']
-domain_dict = dict(x=32, bounds=Box[0:1])  # , extrapolation=extrapolation.PERIODIC)
+domain_dict = dict(x=64, bounds=Box[0:1])  # , extrapolation=extrapolation.PERIODIC)
 dt = 1. / step_count
 viscosity = 0.01 / (N * np.pi)
 if 'viscosity' in runner.config['env'].keys():

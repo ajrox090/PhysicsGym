@@ -9,7 +9,7 @@ from phi.physics._effect import FieldEffect, GROW
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from src.env.phiflow.burgers import Burgers
-from src.util.burgers_util import _get_obs_shape, _get_act_shape, _build_rew, SimpleGaussian, GaussianForce
+from src.util.burgers_util import _get_obs_shape, _get_act_shape, _build_rew, GaussianForce, GaussianClash
 from src.visualization import LivePlotter
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
@@ -74,7 +74,7 @@ class BurgersEnvGym(gym.Env):
         return self._build_obs()
 
     def step(self, actions: np.ndarray):
-        self.actions = actions.reshape(self.cont_state.points._native.shape)
+        self.actions = actions.reshape(self.cont_state.data._native.shape)
         actions_tensor = phi.math.tensor(self.actions, self.cont_state.shape)
         self.step_idx += 1
         forces = self.actions
@@ -91,14 +91,14 @@ class BurgersEnvGym(gym.Env):
         if self.step_idx == self.step_count:
             self.ep_idx += 1
 
-            missing_forces_field = (self.goal_state.points._native - self.cont_state.points._native) / self.dt
+            missing_forces_field = (self.goal_state.data._native - self.cont_state.data._native) / self.dt
             missing_forces_field_tensor = phi.math.tensor(missing_forces_field, self.cont_state.shape)
             missing_forces = FieldEffect(CenteredGrid(missing_forces_field_tensor, **self.domain_dict),
                                                  ['velocity'])
             forces += missing_forces_field
-            self.cont_state = self.cont_state.points._native + missing_forces_field * self.dt
+            self.cont_state = self.cont_state.data._native + missing_forces_field * self.dt
 
-            add_rew = _build_rew(missing_forces.field.points._native) * self.final_reward_factor
+            add_rew = _build_rew(missing_forces.field.data._natives()[0]) * self.final_reward_factor
             rew += add_rew
 
             obs = self.reset()
@@ -123,16 +123,12 @@ class BurgersEnvGym(gym.Env):
 
         if mode == 'live':
             self.lviz.render(fields, labels, 2, True)
-        elif mode == 'gif':
-            self.gifviz.render(fields, labels, 2, True, 'Velocity', self.ep_idx, self.step_idx, self.step_count, True)
-        elif mode == 'png':
-            self.pngviz.render(fields, labels, 2, True, 'Velocity', self.ep_idx, self.step_idx, self.step_count, True)
         else:
             raise NotImplementedError()
 
     def _build_obs(self) -> np.ndarray:
-        curr_data = self.cont_state.points._native
-        goal_data = self.goal_state.points._native
+        curr_data = self.cont_state.data._native
+        goal_data = self.goal_state.data._native
 
         # Preserve the spacial dimensions, cut off batch dim and use only one channel
         time_data = np.full(curr_data.shape[1:-1] + (1,), self.step_idx / self.step_count)
@@ -147,7 +143,7 @@ class BurgersEnvGym(gym.Env):
         return self._step_sim(self.gt_state, (self.gt_forces,))
 
     def _get_init_state(self) -> Field:
-        return CenteredGrid(SimpleGaussian, **self.domain_dict)
+        return CenteredGrid(GaussianClash, **self.domain_dict)
 
     def _get_gt_forces(self) -> FieldEffect:
         return FieldEffect(CenteredGrid(GaussianForce, **self.domain_dict), ['velocity'])

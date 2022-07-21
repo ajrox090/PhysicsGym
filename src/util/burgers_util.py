@@ -27,3 +27,9 @@ def SimpleGaussian(x):
 def GaussianForce(x):
     return 3.4 * math.exp(-0.5 * (x - 0.34) ** 2 / 0.34 ** 2)
 
+
+def GaussianClash(x):
+    left = math.exp(-0.5 * (x - 0.09) ** 2)
+    right = 2.4 * math.exp(-0.5 * (x - 0.34) ** 2)
+    result = left + right
+    return result
