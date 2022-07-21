@@ -1,2 +1,11 @@
-# https://github.com/ajrox090/PhiFlow/tree/1.5
-phiflow==1.5.1
+gym==0.21.0
+imageio==2.19.3
+matplotlib==3.5.2
+numpy==1.23.1
+pandas==1.4.3
+phi==0.6.7
+phiflow==2.1.3
+PyYAML==6.0
+stable_baselines3==1.6.0
+tensorboard==2.9.1
+torch==1.12.0
