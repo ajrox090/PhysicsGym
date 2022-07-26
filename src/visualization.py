@@ -122,7 +122,6 @@ class LivePlotter(LiveViz):
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-        time_str = "{}t{}".format(self.figpath, step_idx)
         # plt.savefig(time_str)
         plt.show()
 

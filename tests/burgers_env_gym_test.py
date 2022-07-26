@@ -10,25 +10,26 @@ from src.env.burgers_env_gym import BurgersEnvGym
 from src.runner import RLRunner
 
 runner = RLRunner(path_config="../experiment.yml")
-
+rc_env = runner.config['env']
+rc_agent = runner.config['agent']
 # env
-N = runner.config['env']['N']
-num_envs = runner.config['env']['num_envs']
-step_count = runner.config['env']['step_count']
-domain_dict = dict(x=64, bounds=Box[0:1])  # , extrapolation=extrapolation.PERIODIC)
+N = rc_env['N']
+num_envs = rc_env['num_envs']
+step_count = rc_env['step_count']
+domain_dict = dict(x=N, bounds=Box[-1:1], extrapolation=extrapolation.PERIODIC)
 dt = 1. / step_count
 viscosity = 0.01 / (N * np.pi)
-if 'viscosity' in runner.config['env'].keys():
-    viscosity = runner.config['env']['viscosity']
-diffusion_substeps = runner.config['env']['diffusion_substeps']
-final_reward_factor = runner.config['env']['final_reward_factor']
+if 'viscosity' in rc_env.keys():
+    viscosity = rc_env['viscosity']
+diffusion_substeps = rc_env['diffusion_substeps']
+final_reward_factor = rc_env['final_reward_factor']
 reward_rms: Optional[RunningMeanStd] = None
 
 # agent
-num_epochs = runner.config['agent']['num_epochs']
-lr = runner.config['agent']['lr']
+num_epochs = rc_agent['num_epochs']
+lr = rc_agent['lr']
 batch_size = step_count
-env_krargs = dict(N=N, num_envs=num_envs, domain_dict=domain_dict, dt=dt,
+env_krargs = dict(N=N, num_envs=num_envs, domain_dict=domain_dict, dt=dt, step_count=step_count,
                   viscosity=viscosity, diffusion_substeps=diffusion_substeps,
                   final_reward_factor=final_reward_factor, reward_rms=reward_rms)
 agent_krargs = dict(verbose=0, policy=MlpPolicy,
@@ -48,6 +49,7 @@ agent = PPO(env=env, **agent_krargs)
 # i.e. maximising the following reward,
 #           reward = -(current_state - gt_state)**2
 print("training begins")
+env.enable_rendering()
 agent.learn(total_timesteps=32)
 print("training complete")
 
@@ -78,8 +80,8 @@ obs = env.reset()
 obs2 = obs[:, :1]  # 1D  # extract current_state
 # Now, numpy.ndarray cannot be directly used as values in CenterGrid so, convert it to 'phi.math.tensor'
 curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
-vis.plot(curr_state)
-vis.show()
+# vis.plot(curr_state)
+# vis.show()
 curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
 
 # 4.3) Play :D

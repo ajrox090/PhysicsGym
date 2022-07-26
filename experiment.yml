@@ -1,11 +1,10 @@
 env:
-  N: 128
+  N: 64
   num_envs: 1
-  step_count: 32
-#  viscosity: auto
+  step_count: 64
+  viscosity: 0.1
   diffusion_substeps: 1
   final_reward_factor: 32
-  exp_name: 'v0'
 
 agent:
   num_epochs: 100

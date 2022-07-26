@@ -17,7 +17,11 @@ class Burgers(Physics):
     def step_velocity(v, viscosity, dt, effects, diffusion_substeps):
         v = diffuse.explicit(field=v, diffusivity=dt * viscosity,
                              dt=dt, substeps=diffusion_substeps)
+        # v = diffuse.fourier(field=v, diffusivity=viscosity,
+        #                     dt=dt)
         v = advect.semi_lagrangian(v, v, dt)
+        # v = advect.advect(v, v, dt)
+
         for effect in effects:
             v = effect_applied(effect, v, dt)
         return v
