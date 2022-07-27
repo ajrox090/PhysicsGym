@@ -1,4 +1,6 @@
 from typing import Tuple
+
+from matplotlib import pyplot as plt
 from phi import math
 import numpy as np
 from phi.math import tensor
@@ -57,3 +59,21 @@ def GaussianForce(x):
     result = tensor(amp, x.shape[0]) * math.exp(
         -0.5 * (x.x.tensor - tensor(loc, x.shape[0])) ** 2 / tensor(sig, x.shape[0]) ** 2)
     return result
+
+
+def waterfall(x, t, u, **kwargs):
+    if 'figsize' in kwargs:
+        fig = plt.figure(figsize=kwargs['figsize'])
+    else:
+        fig = plt.figure(figsize=(6, 6))
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    ax.w_xaxis.set_pane_color((0, 0, 0, 0))
+    ax.w_yaxis.set_pane_color((0, 0, 0, 0))
+    ax.w_zaxis.set_pane_color((0, 0, 0, 0))
+    for i, snapshot in enumerate(u):
+        ax.plot(x, t[i] * np.ones_like(x), snapshot,
+                color=np.random.choice(['blue', 'black']))
+    plt.xlim([x[0], x[-1]])
+    plt.ylim([t[0], t[-1]])
+    plt.tight_layout()
+    return ax

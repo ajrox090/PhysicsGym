@@ -1,15 +1,19 @@
-import math
+import sys
 
+from phi.math import pi
+from copy import deepcopy
+
+from matplotlib import pyplot as plt
 from phi.flow import *
 from src.env.phiflow.burgers import Burgers
 
 N = 32
 # domain_dict = dict(x=N, y=N, bounds=Box(x=10, y=10), extrapolation=extrapolation.ZERO)
-domain_dict = dict(x=N, bounds=Box(x=32), extrapolation=extrapolation.PERIODIC)
+domain_dict = dict(x=N, extrapolation=extrapolation.PERIODIC)
 step_count = 1
 # viscosity = 0.01 / (N * np.pi)
-viscosity = 0.1
-dt = 1. / step_count
+viscosity = 0.0005
+dt = 0.01
 diffusion_substeps = 1
 
 
@@ -32,13 +36,35 @@ def officialGaussianForce(x):
     loc = np.random.uniform(0.4, 0.6, batch_size)
     amp = np.random.uniform(-0.05, 0.05, batch_size) * 32
     sig = np.random.uniform(0.1, 0.4, batch_size)
-    result = tensor(amp, x.shape[0]) * math.exp(-0.5 * (x.x.tensor - tensor(loc, x.shape[0])) ** 2 / tensor(sig, x.shape[0]) ** 2)
+    result = tensor(amp, x.shape[0]) * math.exp(
+        -0.5 * (x.x.tensor - tensor(loc, x.shape[0])) ** 2 / tensor(sig, x.shape[0]) ** 2)
     return result
 
 
-v = CenteredGrid(officialGaussianForce, **domain_dict) * 2
+
+def burgers_rkstiff_function(x):
+    u0 = math.exp(-10 * math.sin(x / 2) ** 2)
+    return u0
+
+
+
+
+v = CenteredGrid(burgers_rkstiff_function, **domain_dict)
 
 physics = Burgers(default_viscosity=viscosity, diffusion_substeps=diffusion_substeps)
 
-for _ in view(play=False, namespace=globals()).range():
+# for _ in view(play=False, namespace=globals()).range():
+x = v.data._native.reshape(-1)  # initial state
+V = []
+t = [i for i in range(1, x.size + 1)]
+for _ in range(40):
     v = physics.step(v, dt=dt)
+    dt = 1.5 * dt
+    if _ % 5 == 0:
+        V.append(v.data._native.reshape(-1))
+        # vis.show(v)
+ax = waterfall(x, t, V, figsize=(8, 8))
+ax.grid(False)
+ax.axis(False)
+ax.view_init(50, -100)
+plt.show()
