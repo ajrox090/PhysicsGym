@@ -1,7 +1,10 @@
+import math
+
+import matplotlib.pyplot as plt
 from phi.flow import *
 from src.env.phiflow.ks import KuramotoSivashinsky
 
-N = 32
+N = 20
 domain_dict = dict(x=N, extrapolation=extrapolation.PERIODIC)
 step_count = 1
 dt = 0.01
@@ -32,17 +35,25 @@ def officialGaussianForce(x):
 
 
 def burgers_rkstiff_function(x):
-    u0 = math.exp(-10 * math.sin(x / 2) ** 2)
+    # u0 = math.exp(-10 * math.sin(x / 2) ** 2)
+    u0 = math.sin(x)
     return u0
 
 
-u = CenteredGrid(Noise(scale=5), x=128,
+u = CenteredGrid(Noise(scale=5), x=N,
                  extrapolation=extrapolation.PERIODIC,
-                 bounds=Box(x=128))
+                 bounds=Box(x=N))
 
 physics = KuramotoSivashinsky()
 
-for _ in view('u', play=True, framerate=5, namespace=globals()).range():
-# for _ in range(5):
-    u = physics.step(u, dt=0.1)
-    # vis.show(u)
+for _ in view('u', play=False, framerate=10, namespace=globals()).range():
+# for _ in range(300):
+    u = physics.step(u, dt=0.01)
+    ux = u.values.native('x,vector')
+
+    # plt.plot(ux)
+    # ax = plt.gca()
+    # ax.set_xlim([-5, N])
+    # ax.set_ylim([-5, N])
+    # plt.show()
+    # # vis.show(u)
