@@ -1,12 +1,4 @@
-import math
-import sys
-
-from phi.math import pi
-from copy import deepcopy
-
-from matplotlib import pyplot as plt
 from phi.flow import *
-from src.env.phiflow.burgers import Burgers
 from src.env.phiflow.ks import KuramotoSivashinsky
 
 N = 32
@@ -44,11 +36,13 @@ def burgers_rkstiff_function(x):
     return u0
 
 
-u = CenteredGrid(lambda x: math.sin(x), **domain_dict)
+u = CenteredGrid(Noise(scale=5), x=128,
+                 extrapolation=extrapolation.PERIODIC,
+                 bounds=Box(x=128))
 
 physics = KuramotoSivashinsky()
 
-for _ in view(play=False, namespace=globals()).range():
+for _ in view('u', play=True, framerate=5, namespace=globals()).range():
 # for _ in range(5):
-    u = physics.step(u, dt=dt)
+    u = physics.step(u, dt=0.1)
     # vis.show(u)

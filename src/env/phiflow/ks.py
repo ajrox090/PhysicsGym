@@ -1,7 +1,5 @@
 from phi.flow import *
 from phi.physics._physics import Physics
-from phi.math import *
-import numpy as np
 
 
 class KuramotoSivashinsky(Physics):
