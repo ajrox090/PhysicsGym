@@ -1,23 +1,14 @@
 Partial differential equations:
+ODE vs PDE:In mathematics, an ordinary differential equation (ODE) is a differential equation containing one or more functions of one independent variable and the derivatives of those functions.[wiki-1]. They are used in real world applications like calculating the movement or flow of electricity, motion of an object to and fro like a pendulum, and explaining thermodynamics concepts. Although odes are useful for modeling certain physical problems, due to the singular independent variable restriction they cannot be used to accurately model complex problems.
 
-ODE vs PDE:
-In mathematics, an ordinary differential equation (ODE) is a differential equation containing one or more functions of one independent variable and the derivatives of those functions.[wiki-1]. They are used in real world applications like calculating the movement or flow of electricity, motion of an object to and fro like a pendulum, and explaining thermodynamics concepts. Although odes are useful for modeling certain physical problems, due to the singular independent variable restriction they cannot be used to accurately model complex problems.
+Def:PDEs are the equations consisting of derivatives that represent change of certain quantity in an environment. They help model certain physical phenomena such as flow of fluids in a container, spreading of heat inside the room when the window is open, how the light waves propagate through different mediums, etc. Pdes typically consists of 2 or more independent variables consituting the function so, they can be used to model pretty much every physical law from heat transfer to fluid flow to sound wave propagation.In order to further understand how partial differential equations are used in this thesis, lets consider the mathematical definition as described in PBDL.
+Math:Consider a continuous PDE P*, where the solution of this pde lies in a spatial domain `omega subset R^d; d=1,2,3, dim`. The pdes evolve for a finite time interval `t belongs to R^+`. The corresponding field is `u: R^d X R^+ --> R^d/R`.
 
-Def:
-PDEs are the equations consisting of derivatives that represent change of certain quantity in an environment. They help model certain physical phenomena such as flow of fluids in a container, spreading of heat inside the room when the window is open, how the light waves propagate through different mediums, etc. Pdes typically consists of 2 or more independent variables consituting the function so, they can be used to model pretty much every physical law from heat transfer to fluid flow to sound wave propagation.In order to further understand how partial differential equations are used in this thesis, lets consider the mathematical definition as described in PBDL.
-
-Math:
-Consider a continuous PDE P*, where the solution of this pde lies in a spatial domain `omega subset R^d; d=1,2,3, dim`. The pdes evolve for a finite time interval `t belongs to R^+`. The corresponding field is `u: R^d X R^+ --> R^d/R`.
-
-Solving:
-The most intutive method for solving PDe is the so called 
-Analytical method: where solution is extracted by changes to already available solutions eg. one such method is spatial? partial differential solver that separates the multiple independent variables in a PDE into individual functions where each function is an ODE. why analytical methods dont work?
-Numerical method: Another famous method is that of numerically finding solutions to pde. The most common technique in numerical methods is Finite Elements method that basically dicretizes continuous pdes into finite timesteps and solves them explicitly for this time duration.
-Talk about Finite elements method:
+Solving:The most intutive method for solving PDe is the so called Analytical method: where solution is extracted by changes to already available solutions eg. one such method is spatial? partial differential solver that separates the multiple independent variables in a PDE into individual functions where each function is an ODE. why analytical methods dont work?
+Numerical method: Another famous method is that of numerically finding solutions to pde. The most common technique in numerical methods is Finite Elements method that basically dicretizes continuous pdes into finite timesteps and solves them explicitly for this time duration.Talk about Finite elements method:
 
 
-Examples:
-Some examples of pdes are burgers equation, heat equation, kuramoto sivashinsky equation and navier stokes.
+Examples:Some examples of pdes are burgers equation, heat equation, kuramoto sivashinsky equation and navier stokes.
 1) Burgers equation: is a simple advection diffusion equation where the advection terms represent the motion of each particle in the field and the diffusion term, the dissipation due to the second law of thermodynamics. \Equations1. Here, v represents the viscosity of the fluid and g denotes the external forces applied. For an inviscous fluid, this equation simplifies to \Equations2.
 2) Heat eqution: is a simple diffusion equation that helps model how the heat transfer occurs between from the area that is hot to the area that is cold. It does so by explicity diffusing heat and is given by \Equations.
 3) Kuramoto Sivashinsky: is a fourth order convection-diffusion equation that helps model physical phenoma like flame fronts, fluid flow and more. One property of KS equation is that with the increase in domain complexity, the stability of system decreases.
