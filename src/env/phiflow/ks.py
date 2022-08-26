@@ -8,7 +8,7 @@ class KuramotoSivashinsky(Physics):
         Physics.__init__(self)
 
     def step(self, u, dt=1.0, **dependent_states):
-        assert isinstance(u, CenteredGrid)
+        # assert isinstance(u, CenteredGrid)
         grad = field.spatial_gradient(u)
         laplace = field.laplace(u)
         laplace2 = field.laplace(field.laplace(u))

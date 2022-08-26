@@ -1,6 +1,8 @@
 from phi.physics._effect import effect_applied
 from phi.physics._physics import StateDependency, Physics
 from phi.flow import *  # minimal dependencies
+
+
 # from phi.torch.flow import *
 
 
@@ -25,6 +27,7 @@ class NavierStokes(Physics):
         vorticity = field.curl(v)
         return v, pressure, vorticity
 
+
 # For Example:
 # SPEED = vis.control(2.)
 # CYLINDER1 = Obstacle(geom.infinite_cylinder(x=15, y=32, radius=5, inf_dim=None))
@@ -32,8 +35,12 @@ class NavierStokes(Physics):
 #
 # velocity = StaggeredGrid((SPEED, 0), extrapolation.BOUNDARY, x=128, y=128, bounds=Box(x=128, y=100))
 # BOUNDARY_MASK = StaggeredGrid(Box(x=(-INF, 0.5), y=None),
-#           velocity.extrapolation, velocity.bounds, velocity.resolution)
+#                               velocity.extrapolation, velocity.bounds, velocity.resolution)
 # pressure = None
 #
 # ns = NavierStokes()
-# ns.step(velocity=velocity, pressure=pressure)
+# x = ns.step(v=velocity, pressure=pressure)
+#
+# for i in range(1000):
+#     velocity, pressure, voriticity = ns.step(v=velocity, pressure=pressure)
+#     vis.show([velocity, pressure, voriticity])
