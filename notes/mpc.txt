@@ -1,0 +1,23 @@
+MPC (5-8p) [currently 0p]
+
+-----------------------------------------------------------------------------------------------------------* Introduction to control theory [1p]
+* Model Predictive control [1p]
+	- basic idea, explain the general idea of algorithm
+	- algorithm
+	- some explanations
+
+* MPC problems [1.5p]
+	- closed loop system define
+	- costs
+	- optimal value of cost
+	- stabilizing mpc
+	- economic mpc
+
+* convection diffusion pde [1p]
+	- intro
+	- boundary condition
+	- problem statement
+	- solution methods
+
+-----------------------------------------------------------------------------------------------------------
+
