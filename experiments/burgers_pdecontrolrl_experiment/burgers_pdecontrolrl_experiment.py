@@ -1,52 +1,92 @@
-from matplotlib import pyplot as plt
+from typing import Optional
+import gym
 from phi.flow import *
+from stable_baselines3 import PPO
+from stable_baselines3.common.running_mean_std import RunningMeanStd
+from stable_baselines3.ppo import MlpPolicy
 
-from src.experiment import BurgersTrainingExpr
+from src.env.burgers_env_gym import Burgers1DEnvGym
+from src.runner import RLRunner
 
+runner = RLRunner(path_config="experiment.yml")
+rc_env = runner.config['env']
+rc_agent = runner.config['agent']
+# env
+N = rc_env['N']
+step_count = rc_env['step_count']
+domain_dict = dict(x=N, bounds=Box[-1:1], extrapolation=extrapolation.PERIODIC)
+dt = 1. / step_count
+viscosity = 0.01 / (N * np.pi)
+if 'viscosity' in rc_env.keys():
+    viscosity = rc_env['viscosity']
+diffusion_substeps = rc_env['diffusion_substeps']
+final_reward_factor = rc_env['final_reward_factor']
+reward_rms: Optional[RunningMeanStd] = None
 
-def main():
-    N = 128
-    domain = Domain([N], box=box[0:1])
-    # viscosity = 0.03
-    viscosity = 0.01 / (N * np.pi)
-    step_count = 64
-    dt = 1. / step_count
-    # dt = 0.01
-    diffusion_substeps = 1
+# agent
+num_epochs = rc_agent['num_epochs']
+lr = rc_agent['lr']
+batch_size = step_count
+env_krargs = dict(N=N, domain_dict=domain_dict, dt=dt, step_count=step_count,
+                  viscosity=viscosity, diffusion_substeps=diffusion_substeps,
+                  final_reward_factor=final_reward_factor, reward_rms=reward_rms)
+agent_krargs = dict(verbose=0, policy=MlpPolicy,
+                    n_steps=step_count,
+                    n_epochs=num_epochs,
+                    learning_rate=lr,
+                    batch_size=batch_size)
 
-    n_envs = 1  # On how many environments to train in parallel, load balancing
-    final_reward_factor = step_count  # How hard to punish the agent for not reaching the goal if that is the case
-    steps_per_rollout = step_count * 1  # How many steps to collect per environment between agent updates
-    n_epochs = 100  # How many epochs to perform during agent update
-    learning_rate = 1e-6  # Learning rate for agent updates
-    rl_batch_size = n_envs * step_count  # Batch size for agent updates
+# 1) Create an instance of Burgers' environment defined in phiflow/Burgers.py  with above parameters.
+env = Burgers1DEnvGym(**env_krargs)
+# changed the env interface from stable_baselines3.VecEnv -> gym.Env
+assert isinstance(env, gym.Env)
+# 2) Create default PPO agent without any external NNs.
+agent = PPO(env=env, **agent_krargs)
 
-    rl_trainer = BurgersTrainingExpr(
-        N,
-        path='networks/rl-models/time_bench',
-        domain=domain,
-        viscosity=viscosity,
-        step_count=step_count,
-        dt=dt,
-        diffusion_substeps=diffusion_substeps,
-        n_envs=n_envs,
-        steps_per_rollout=steps_per_rollout,
-        n_epochs=n_epochs,
-        learning_rate=learning_rate,
-        batch_size=rl_batch_size,
-        test_range=None,  # test_range,
-    )
-    # rl_trainer.reset_env()
-    # rl_trainer.step_env()
-    # rl_trainer.show_state()
-    rl_trainer.train(n_rollouts=2, save_freq=10)
-    rl_trainer.show_state()
-    rl_trainer.show_vels()
-    rl_trainer.plot()
-    plt.show()
-    # rl_trainer.render_env(mode='live')
-    # plt.show()
+# 3) train the agent to learn the distribution of actions using an optimization algorithm
+# i.e. maximising the following reward,
+#           reward = -(current_state - gt_state)**2
+print("training begins")
+env.enable_rendering()
+agent.learn(total_timesteps=32)
+print("training complete")
 
+# Note: Here the term 'State' refers to phiflow.CenteredGrid/.StaggeredGrid/.PointCloud,...
+# which is a fancy way of representing phiflow.Field implementations which are used to store interesting values like,
+# velocity, pressure, temperature, etc.
+#
+# 3.0) Initial State:
+# During training, the agent interacts with the environment in the form of performing
+# actions. The actions in general could be discrete or continuous, but here we consider only continuous actions
+# which are sampled from a simple 'Gaussian function'. The sampled action is used only initially and then the NN updates
+# it in the direction of maximizing the reward above.
+#
+# 3.1) Target State:
+# The 'render' function of the Env also plots individual states and shows how each state progresses in time in
+# comparison to its ground truth value, decided by the target function. The target function here is 'Gaussian force'
+# function defined in util/burgers_util.py
 
-if __name__ == '__main__':
-    main()
+# 4) Testing:
+#
+# 4.1) Reset:
+# let's test how the agent performs on 'a simple gaussian function' with different parameters.
+# Maybe, I should probably use a different/ similar function, but it all depends on the problem at hand.
+obs = env.reset()
+# 4.2) Pre-processing:
+# On resetting the environment, we get the observation which is a tuple of (current_state, ground_truth_state, time)
+# obs2 = obs[:, :, :2] # 2D
+obs2 = obs[:, :1]  # 1D  # extract current_state
+# Now, numpy.ndarray cannot be directly used as values in CenterGrid so, convert it to 'phi.math.tensor'
+curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
+# vis.plot(curr_state)
+# vis.show()
+curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
+
+# 4.3) Play :D
+# The view below is a very nice interactive viewer by phiflow, this basically plots every phi.Field objects in an
+# interactive plot which opens in a browser. The objects for plotting can also be described as parameters.
+# For the below example, the supported object is curr_state.
+for i in view(play=True, namespace=globals()).range(32):
+    curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
+    act = agent.predict(obs)[0]
+    obs, reward, done, info = env.step(act)

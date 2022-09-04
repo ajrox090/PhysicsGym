@@ -2,7 +2,6 @@ import math
 
 from phi.torch.flow import *
 from src.env.phiflow.heat import Heat
-from src.util.burgers_util import simpleGaussianClash
 
 N = 128
 num_envs = 1

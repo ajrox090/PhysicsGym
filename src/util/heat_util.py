@@ -1,50 +1,44 @@
+from phi import math
 import numpy as np
-from phi.flow import struct
-from phi.physics.field import AnalyticField
+from phi.math import tensor
 
 
-# todo: define forces as defined in Heat Invader problem,
-#  currently using the same as burgers equation
-@struct.definition()
-class GaussianClash(AnalyticField):
-
-    def __init__(self, batch_size):
-        AnalyticField.__init__(self, rank=1)
-        self.batch_size = batch_size
-
-    def sample_at(self, idx, collapse_dimensions=True):
-        leftloc = np.random.uniform(0.2, 0.4, self.batch_size)
-        leftamp = np.random.uniform(0, 3, self.batch_size)
-        leftsig = np.random.uniform(0.05, 0.15, self.batch_size)
-        rightloc = np.random.uniform(0.6, 0.8, self.batch_size)
-        rightamp = np.random.uniform(-3, 0, self.batch_size)
-        rightsig = np.random.uniform(0.05, 0.15, self.batch_size)
-        idx = np.swapaxes(idx, 0, -1)  # batch last to match random values
-        left = leftamp * np.exp(-0.5 * (idx - leftloc) ** 2 / leftsig ** 2)
-        right = rightamp * np.exp(-0.5 * (idx - rightloc) ** 2 / rightsig ** 2)
-        result = left + right
-        result = np.swapaxes(result, 0, -1)
-        return result
-
-    @struct.constant()
-    def data(self, data):
-        return data
+def SimpleGaussian(x):
+    left = math.exp(-0.5 * (x - 0.09) ** 2 / 0.34 ** 2)
+    right = math.exp(-0.5 * (x - 0.34) ** 2 / 0.34 ** 2)
+    result = left + right
+    return result
 
 
-@struct.definition()
-class GaussianForce(AnalyticField):
-    def __init__(self, batch_size):
-        AnalyticField.__init__(self, rank=1)
-        self.loc = np.random.uniform(0.4, 0.6, batch_size)
-        self.amp = np.random.uniform(-0.05, 0.05, batch_size) * 32
-        self.sig = np.random.uniform(0.1, 0.4, batch_size)
+def simpleGaussianForce(x):
+    return 2.4 * math.exp(-0.5 * (x - 0.34) ** 2 / 0.34 ** 2)
 
-    def sample_at(self, idx, collapse_dimensions=True):
-        idx = np.swapaxes(idx, 0, -1)  # batch last to match random values
-        result = self.amp * np.exp(-0.5 * (idx - self.loc) ** 2 / self.sig ** 2)
-        result = np.swapaxes(result, 0, -1)
-        return result
 
-    @struct.constant()
-    def data(self, data):
-        return data
+def simpleGaussianClash(x):
+    left = math.exp(-0.5 * (x - 0.09) ** 2)
+    right = 2.4 * math.exp(-0.5 * (x - 0.34) ** 2)
+    result = left + right
+    return result
+
+
+def GaussianClash(x):
+    leftloc = np.random.uniform(0.2, 0.4)
+    leftamp = np.random.uniform(0, 3)
+    leftsig = np.random.uniform(0.05, 0.15)
+    rightloc = np.random.uniform(0.6, 0.8)
+    rightamp = np.random.uniform(-3, 0)
+    rightsig = np.random.uniform(0.05, 0.15)
+    left = tensor(leftamp, x.shape[0]) * math.exp(-0.5 * (x.x.tensor - tensor(leftloc, x.shape[0])) ** 2 / tensor(leftsig, x.shape[0]) ** 2)
+    right = tensor(rightamp, x.shape[0]) * math.exp(-0.5 * (x.x.tensor - tensor(rightloc, x.shape[0])) ** 2 / tensor(rightsig, x.shape[0]) ** 2)
+    result = left + right
+    return result
+
+
+def GaussianForce(x):
+    batch_size = 32
+    loc = np.random.uniform(0.4, 0.6, batch_size)
+    amp = np.random.uniform(-0.05, 0.05, batch_size) * 32
+    sig = np.random.uniform(0.1, 0.4, batch_size)
+    result = tensor(amp, x.shape[0]) * math.exp(
+        -0.5 * (x.x.tensor - tensor(loc, x.shape[0])) ** 2 / tensor(sig, x.shape[0]) ** 2)
+    return result

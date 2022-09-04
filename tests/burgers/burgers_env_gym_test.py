@@ -6,7 +6,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 from stable_baselines3.ppo import MlpPolicy
 
-from src.env.burgers_env_gym import BurgersEnvGym
+from src.env.burgers_env_gym import Burgers1DEnvGym
 from src.runner import RLRunner
 
 runner = RLRunner(path_config="../experiment.yml")
@@ -39,7 +39,7 @@ agent_krargs = dict(verbose=0, policy=MlpPolicy,
                     batch_size=batch_size)
 
 # 1) Create an instance of Burgers' environment defined in phiflow/Burgers.py  with above parameters.
-env = BurgersEnvGym(**env_krargs)
+env = Burgers1DEnvGym(**env_krargs)
 # changed the env interface from stable_baselines3.VecEnv -> gym.Env
 assert isinstance(env, gym.Env)
 # 2) Create default PPO agent without any external NNs.

@@ -6,20 +6,6 @@ import numpy as np
 from phi.math import tensor
 
 
-def _build_rew(forces: np.ndarray) -> np.ndarray:
-    reshaped_forces = forces.reshape(forces.shape[0], -1)
-    return -np.sum(reshaped_forces ** 2, axis=-1)
-
-
-def _get_act_shape(field_shape: Tuple[int, ...]) -> Tuple[int, ...]:
-    act_dim = np.prod(field_shape) * len(field_shape)
-    return act_dim,
-
-
-def _get_obs_shape(field_shape: Tuple[int, ...]) -> Tuple[int, ...]:
-    return tuple(field_shape) + (2 * len(field_shape) + 1,)
-
-
 def SimpleGaussian(x):
     left = math.exp(-0.5 * (x - 0.09) ** 2 / 0.34 ** 2)
     right = math.exp(-0.5 * (x - 0.34) ** 2 / 0.34 ** 2)
@@ -45,8 +31,10 @@ def GaussianClash(x):
     rightloc = np.random.uniform(0.6, 0.8)
     rightamp = np.random.uniform(-3, 0)
     rightsig = np.random.uniform(0.05, 0.15)
-    left = tensor(leftamp, x.shape[0]) * math.exp(-0.5 * (x.x.tensor - tensor(leftloc, x.shape[0])) ** 2 / tensor(leftsig, x.shape[0]) ** 2)
-    right = tensor(rightamp, x.shape[0]) * math.exp(-0.5 * (x.x.tensor - tensor(rightloc, x.shape[0])) ** 2 / tensor(rightsig, x.shape[0]) ** 2)
+    left = tensor(leftamp, x.shape[0]) * math.exp(
+        -0.5 * (x.x.tensor - tensor(leftloc, x.shape[0])) ** 2 / tensor(leftsig, x.shape[0]) ** 2)
+    right = tensor(rightamp, x.shape[0]) * math.exp(
+        -0.5 * (x.x.tensor - tensor(rightloc, x.shape[0])) ** 2 / tensor(rightsig, x.shape[0]) ** 2)
     result = left + right
     return result
 
