@@ -66,6 +66,45 @@ The RL algorithm uses this optimal value function to choose the best policy that
 
 
 
+ref: Reinforcement learning for function-valued action space
+
+* Heat Invader- a PDE example:
+	- PDE problem
+	- define types of action space possible for this example and explain the impact of low-dimensional and high-dimensional control actions on the dimensionality of action space.
+	- controlling a pde with boundary conditions
+* PDE control as MDP:
+	- MDP defintion with what happens at each timestep along with the intuition behind expressing MDP as PDE.
+	- explain how to forumlate state space and action spaces. explain dynamics of MDP as that of pde thereby defining the transition probability kernel.
+	- introduce how to decide a good reward and discount factor: for heat invader, this reward is based on the comfort level of person in the room and also the cost of actions like energy, electricity.
+* Action descriptors and MDP:
+	- why are action descriptors needed
+	- mdps with action descriptors mathematical explanation
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
