@@ -5,7 +5,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 from stable_baselines3.ppo import MlpPolicy
 
-from src.env.ks1D_env_gym import KS1DEnvGym
+from src.env.burgers_env_gym import Burgers1DEnvGym
 from src.runner import RLRunner
 
 runner = RLRunner(path_config="experiment.yml")
@@ -14,16 +14,21 @@ rc_agent = runner.config['agent']
 # env
 N = rc_env['N']
 step_count = rc_env['step_count']
+domain_dict = dict(x=N, bounds=Box[-1:1])
 dt = 1. / step_count
-reward_rms: Optional[RunningMeanStd] = None
+viscosity = 0.01 / (N * np.pi)
+if 'viscosity' in rc_env.keys():
+    viscosity = rc_env['viscosity']
+diffusion_substeps = rc_env['diffusion_substeps']
 final_reward_factor = rc_env['final_reward_factor']
-domain_dict = dict(x=N, bounds=Box[-1:1], extrapolation=extrapolation.PERIODIC)
+reward_rms: Optional[RunningMeanStd] = None
 
 # agent
+num_epochs = rc_agent['num_epochs']
 lr = rc_agent['lr']
 batch_size = step_count
-num_epochs = rc_agent['num_epochs']
 env_krargs = dict(N=N, domain_dict=domain_dict, dt=dt, step_count=step_count,
+                  viscosity=viscosity, diffusion_substeps=diffusion_substeps,
                   final_reward_factor=final_reward_factor, reward_rms=reward_rms)
 agent_krargs = dict(verbose=0, policy=MlpPolicy,
                     n_steps=step_count,
@@ -32,7 +37,7 @@ agent_krargs = dict(verbose=0, policy=MlpPolicy,
                     batch_size=batch_size)
 
 # 1) Create an instance of Burgers' environment defined in phiflow/Burgers.py  with above parameters.
-env = KS1DEnvGym(**env_krargs)
+env = Burgers1DEnvGym(**env_krargs)
 # changed the env interface from stable_baselines3.VecEnv -> gym.Env
 assert isinstance(env, gym.Env)
 # 2) Create default PPO agent without any external NNs.
@@ -45,6 +50,21 @@ print("training begins")
 env.enable_rendering()
 agent.learn(total_timesteps=32)
 print("training complete")
+
+# Note: Here the term 'State' refers to phiflow.CenteredGrid/.StaggeredGrid/.PointCloud,...
+# which is a fancy way of representing phiflow.Field implementations which are used to store interesting values like,
+# velocity, pressure, temperature, etc.
+#
+# 3.0) Initial State:
+# During training, the agent interacts with the environment in the form of performing
+# actions. The actions in general could be discrete or continuous, but here we consider only continuous actions
+# which are sampled from a simple 'Gaussian function'. The sampled action is used only initially and then the NN updates
+# it in the direction of maximizing the reward above.
+#
+# 3.1) Target State:
+# The 'render' function of the Env also plots individual states and shows how each state progresses in time in
+# comparison to its ground truth value, decided by the target function. The target function here is 'Gaussian force'
+# function defined in util/burgers_util.py
 
 # 4) Testing:
 #

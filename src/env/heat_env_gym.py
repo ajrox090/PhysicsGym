@@ -8,7 +8,7 @@ from typing import Optional, Tuple, Union, Dict
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from src.env.EnvWrapper import EnvWrapper
-from src.env.phiflow.heat import Heat
+from src.env.physics.heat import Heat
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 

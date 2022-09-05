@@ -1,6 +1,9 @@
 env:
   N: 64
+  bounds: 64
   step_count: 64
+  viscosity: 0.1
+  diffusion_substeps: 1
   final_reward_factor: 32
   dt: 0.01
 

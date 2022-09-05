@@ -1,17 +1,20 @@
+import copy
 import math
 
 import matplotlib.pyplot as plt
 from phi.flow import *
-from src.env.phiflow.ks import KuramotoSivashinsky
+from phi.physics._effect import FieldEffect
+
+from src.env.physics.ks import KuramotoSivashinsky
 
 N = 20
-domain_dict = dict(x=N, extrapolation=extrapolation.PERIODIC)
+domain_dict = dict(x=N, bounds=Box(x=20), extrapolation=extrapolation.PERIODIC)
 step_count = 1
 dt = 0.01
 
 
 def officialGaussianClash(x):
-    batch_size = 32
+    batch_size = 20
     leftloc = np.random.uniform(0.2, 0.4)
     leftamp = np.random.uniform(0, 3)
     leftsig = np.random.uniform(0.05, 0.15)
@@ -25,7 +28,7 @@ def officialGaussianClash(x):
 
 
 def officialGaussianForce(x):
-    batch_size = 32
+    batch_size = 20
     loc = np.random.uniform(0.4, 0.6, batch_size)
     amp = np.random.uniform(-0.05, 0.05, batch_size) * 32
     sig = np.random.uniform(0.1, 0.4, batch_size)
@@ -34,26 +37,38 @@ def officialGaussianForce(x):
     return result
 
 
-def burgers_rkstiff_function(x):
-    # u0 = math.exp(-10 * math.sin(x / 2) ** 2)
-    u0 = math.sin(x)
+def simpleSine(x):
+    u0 = math.exp(-10 * math.sin(x / 2) ** 2)
+    # u0 = math.sin(x)
     return u0
 
 
-u = CenteredGrid(Noise(scale=5), x=N,
-                 extrapolation=extrapolation.PERIODIC,
-                 bounds=Box(x=N))
+def simpleCosine(x):
+    u0 = math.exp(-10 * math.cos(x / 2) ** 2)
+    # u0 = math.cos(x)
+    return u0
 
-physics = KuramotoSivashinsky()
 
-for _ in view('u', play=False, framerate=10, namespace=globals()).range():
-# for _ in range(300):
-    u = physics.step(u, dt=0.01)
-    ux = u.values.native('x,vector')
-
-    # plt.plot(ux)
-    # ax = plt.gca()
-    # ax.set_xlim([-5, N])
-    # ax.set_ylim([-5, N])
-    # plt.show()
-    # # vis.show(u)
+# physics = KuramotoSivashinsky()
+# gt_forces = FieldEffect(CenteredGrid(simpleCosine, **domain_dict), ['velocity'])
+# init_state = CenteredGrid(simpleSine, **domain_dict)
+# cont_state = copy.deepcopy(init_state)
+# # prepare goal state
+# state = copy.deepcopy(init_state)
+# for _ in view('hbb', play=False, framerate=10, namespace=globals()).range():
+#     # state = physics.step(state, dt=dt, dependend_states=(gt_forces,))
+#     state = physics.step(state, dt=dt)
+#
+# goal_state = state
+#
+# # for _ in view('u', play=False, framerate=10, namespace=globals()).range():
+#     # for _ in range(300):
+#     u = physics.step(u, dt=0.01)
+#     ux = u.values.native('x,vector')
+#
+#     # plt.plot(ux)
+#     # ax = plt.gca()
+#     # ax.set_xlim([-5, N])
+#     # ax.set_ylim([-5, N])
+# plt.show()
+# # vis.show(u)

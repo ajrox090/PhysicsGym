@@ -8,7 +8,8 @@ from typing import Optional, Tuple, Union, Dict
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from src.env.EnvWrapper import EnvWrapper
-from src.env.phiflow.ks import KuramotoSivashinsky
+from src.env.physics.ks import KuramotoSivashinsky
+from tests.simple_ks_simulation import simpleSine, simpleCosine
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
@@ -27,7 +28,7 @@ class KS1DEnvGym(EnvWrapper):
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, dtype=np.float32,
                                                 shape=self._get_obs_shape(tuple([domain_dict['x']])))  # , domain_dict[
         # 'y']])))
-        self.action_space = gym.spaces.Box(low=0, high=255, dtype=np.float32,
+        self.action_space = gym.spaces.Box(low=0, high=1, dtype=np.float32,
                                            shape=self._get_act_shape(tuple([domain_dict['x']])))  # , domain_dict[
         # 'y']])))
 
@@ -44,8 +45,10 @@ class KS1DEnvGym(EnvWrapper):
 
     def reset(self) -> GymEnvObs:
         self.step_idx = 0
-        self.gt_forces = FieldEffect(CenteredGrid(self.GaussianForce, **self.domain_dict), ['velocity'])
-        self.init_state = CenteredGrid(self.GaussianClash, **self.domain_dict)
+        # self.gt_forces = FieldEffect(CenteredGrid(self.GaussianForce, **self.domain_dict), ['velocity'])
+        # self.init_state = CenteredGrid(self.GaussianClash, **self.domain_dict)
+        self.gt_forces = FieldEffect(CenteredGrid(simpleSine, **self.domain_dict), ['velocity'])
+        self.init_state = CenteredGrid(simpleCosine, **self.domain_dict)
         self.cont_state = copy.deepcopy(self.init_state)
         # prepare goal state
         state = copy.deepcopy(self.init_state)
