@@ -9,9 +9,13 @@ class Burgers(Physics):
         Physics.__init__(self, [StateDependency('effects', 'velocity_effect', blocking=True)])
         self.default_viscosity = default_viscosity
         self.diffusion_substeps = diffusion_substeps
+        self.trajectory = []
 
     def step(self, v, dt=1.0, effects=()):
-        return Burgers.step_velocity(v, self.default_viscosity, dt, effects, self.diffusion_substeps)
+        trajectory = Burgers.step_velocity(v, self.default_viscosity, dt, effects, self.diffusion_substeps)
+        self.trajectory.append(v.vector['x'])
+
+        return trajectory
 
     @staticmethod
     def step_velocity(v, viscosity, dt, effects, diffusion_substeps):

@@ -1,13 +1,20 @@
-// 9 pages approximately.
+# 9 pages approximately.
 
 Burgers equation (3p)
-- Introduction
-- Problem definition
-	- explain how rl algorithms approach a problem
-	- transition probability
-	- reward
-- Implementation
-- Results 
+    - Introduction
+        Burgers equation is one of the simplest PDEs that describes speed of fluid with respect to time and is given by
+        d/dt u(x,t) = - u(x,t) * d/dx u(x,t) + v * d2/dx2 u(x,t) + F(x,t)
+        Here, u is the velocity field, v is the viscosity of fluid and F is the optional control force.  This viscous
+        burgers equation calculates the change in velocity u(x,t) of a viscous fluid in the presence of an external
+        force. This equation further simplifies to inviscous burgers equation in the presence of inviscous fluid, also
+        used for prototyping equations causing shock-waves in solution.
+        d/dt u(x,t) + u(x,t) * d/dx u(x,t) = 0
+    - Problem definition
+        - explain how rl algorithms approach a problem
+        - transition probability
+        - reward
+    - Implementation
+    - Results
 
 
 Heat equation (0p)

@@ -1,0 +1,10 @@
+Burgers equation
+
+Burgers equation is one of the simplest PDEs describing the speed of fluid with respect to time and is given by
+d/dt u(x,t) = - u(x,t) * d/dx u(x,t) + v * d2/dx2 u(x,t) + F(x,t)
+
+where, u is the velocity field, v is the viscosity of fluid and F is the optional control force.  This viscous
+burgers equation describes the change in velocity u(x,t) of a viscous fluid in the presence of an external force.
+For inviscous fluid, the burgers equation simplifies to inviscous burgers equation
+d/dt u(x,t) + u(x,t) * d/dx u(x,t) = 0
+which is a prototype for equations that develop shockwaves.

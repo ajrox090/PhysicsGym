@@ -2,7 +2,7 @@
 # makes the equation very unstable.
 env:
   N: 128
-  step_count: 50
+  step_count: 1000
   final_reward_factor: 32
   dt: 0.25
   bounds: 22

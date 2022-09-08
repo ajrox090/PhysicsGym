@@ -2,10 +2,15 @@ import gym
 import copy
 import phi.math
 import numpy as np
+from matplotlib import pyplot as plt
+from phi import field, vis
 from phi.field import CenteredGrid
+from phi.geom import Box
+from phi.math import spatial
 from phi.physics._effect import FieldEffect
 from typing import Optional, Tuple, Union, Dict
 from stable_baselines3.common.running_mean_std import RunningMeanStd
+from tqdm import tqdm
 
 from src.env.EnvWrapper import EnvWrapper
 from src.env.physics.burgers import Burgers
@@ -39,22 +44,34 @@ class Burgers1DEnvGym(EnvWrapper):
         self.domain_dict = domain_dict
         self.step_count = step_count
         self.viscosity = viscosity
+        self.diffusion_substeps = diffusion_substeps
         self.physics = Burgers(diffusion_substeps=diffusion_substeps)
         self.final_reward_factor = final_reward_factor
         self.reward_rms = reward_rms
         if self.reward_rms is None:
             self.reward_rms = RunningMeanStd()
+        self.goal_trajectory = []
+        self.raw_trajectory = []
+        self.raw_state = None
 
     def reset(self) -> GymEnvObs:
         self.step_idx = 0
+        self.goal_trajectory = []
+        self.physics = Burgers(diffusion_substeps=self.diffusion_substeps)
         self.gt_forces = FieldEffect(CenteredGrid(self.GaussianForce, **self.domain_dict), ['velocity'])
         self.init_state = CenteredGrid(self.GaussianClash, **self.domain_dict)
+        self.raw_trajectory = []
         self.cont_state = copy.deepcopy(self.init_state)
-        # prepare goal state
+        # calculate goal state based on ground truth forces
         state = copy.deepcopy(self.init_state)
-        for _ in range(self.step_count):
-            state = self._step_sim(state, (self.gt_forces,))
+        raw_state = copy.deepcopy(self.init_state)
+        for _ in tqdm(range(self.step_count)):
+            state = self._step_sim(state.vector['x'], (self.gt_forces,))
+            raw_state = self._step_sim(raw_state.vector['x'], ())
+            self.goal_trajectory.append(state.vector['x'])
+            self.raw_trajectory.append(raw_state.vector['x'])
         self.goal_state = state
+        self.raw_state = self.raw_trajectory[-1]
         # init reference states
         if self.test_mode:
             self.gt_state = copy.deepcopy(self.init_state)
@@ -69,7 +86,8 @@ class Burgers1DEnvGym(EnvWrapper):
         self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
 
         if self.rendering:
-            self.render()
+            if self.step_idx % 20 == 0:
+                self.render()
         # Perform reference simulation only when evaluating results -> after render was called once
         if self.test_mode:
             self.gt_state = self._step_gt()
@@ -101,7 +119,19 @@ class Burgers1DEnvGym(EnvWrapper):
         if not self.test_mode:
             self.test_mode = True
             self.gt_state = copy.deepcopy(self.init_state)
-        super(Burgers1DEnvGym, self).render()
+        super().render()
+
+    def last_render(self):
+        # render state trajectory
+        temp_t = field.stack(self.physics.trajectory, spatial('time'),
+                             Box(time=len(self.physics.trajectory) * self.dt))  # time=len(trajectory)* dt
+        vis.show(temp_t.vector[0], aspect='auto', size=(8, 3), title='optimal state trajectory')
+        # render goal state trajectory
+        temp_gt = field.stack(self.goal_trajectory, spatial('time'), Box(time=len(self.goal_trajectory) * self.dt))
+        vis.show(temp_gt.vector[0], aspect='auto', size=(8, 3), title='goal state trajectory')
+        # raw state trajectory
+        temp_rt = field.stack(self.raw_trajectory, spatial('time'), Box(time=len(self.raw_trajectory) * self.dt))
+        vis.show(temp_rt.vector[0], aspect='auto', size=(8, 3), title='raw state trajectory')
 
     def _build_obs(self) -> np.ndarray:
         curr_data = copy.deepcopy(self.cont_state.data._native)

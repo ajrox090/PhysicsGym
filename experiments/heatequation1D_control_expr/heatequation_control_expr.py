@@ -49,28 +49,28 @@ print("training begins")
 env.enable_rendering()
 agent.learn(total_timesteps=32)
 print("training complete")
-
-# 4) Testing:
 #
-# 4.1) Reset:
-# let's test how the agent performs on 'a simple gaussian function' with different parameters.
-# Maybe, I should probably use a different/ similar function, but it all depends on the problem at hand.
-obs = env.reset()
-# 4.2) Pre-processing:
-# On resetting the environment, we get the observation which is a tuple of (current_state, ground_truth_state, time)
-# obs2 = obs[:, :, :2] # 2D
-obs2 = obs[:, :1]  # 1D  # extract current_state
-# Now, numpy.ndarray cannot be directly used as values in CenterGrid so, convert it to 'phi.math.tensor'
-curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
-# vis.plot(curr_state)
-# vis.show()
-curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
-
-# 4.3) Play :D
-# The view below is a very nice interactive viewer by phiflow, this basically plots every phi.Field objects in an
-# interactive plot which opens in a browser. The objects for plotting can also be described as parameters.
-# For the below example, the supported object is curr_state.
-for i in view(play=True, namespace=globals()).range(32):
-    curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
-    act = agent.predict(obs)[0]
-    obs, reward, done, info = env.step(act)
+# # 4) Testing:
+# #
+# # 4.1) Reset:
+# # let's test how the agent performs on 'a simple gaussian function' with different parameters.
+# # Maybe, I should probably use a different/ similar function, but it all depends on the problem at hand.
+# obs = env.reset()
+# # 4.2) Pre-processing:
+# # On resetting the environment, we get the observation which is a tuple of (current_state, ground_truth_state, time)
+# # obs2 = obs[:, :, :2] # 2D
+# obs2 = obs[:, :1]  # 1D  # extract current_state
+# # Now, numpy.ndarray cannot be directly used as values in CenterGrid so, convert it to 'phi.math.tensor'
+# curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
+# # vis.plot(curr_state)
+# # vis.show()
+# curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
+#
+# # 4.3) Play :D
+# # The view below is a very nice interactive viewer by phiflow, this basically plots every phi.Field objects in an
+# # interactive plot which opens in a browser. The objects for plotting can also be described as parameters.
+# # For the below example, the supported object is curr_state.
+# for i in view(play=True, namespace=globals()).range(32):
+#     curr_state = CenteredGrid(phi.math.tensor(obs2, env.cont_state.shape), obs2.shape)
+#     act = agent.predict(obs)[0]
+#     obs, reward, done, info = env.step(act)

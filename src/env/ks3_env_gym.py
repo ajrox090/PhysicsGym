@@ -14,7 +14,7 @@ from tqdm import tqdm
 from src.env.EnvWrapper import EnvWrapper
 from src.env.physics.ks3 import KuramotoSivashinsky
 from src.util.ks_util import ks_initial, ks_initial2
-from tests.simple_ks_simulation import simpleSine, simpleCosine
+# from tests.simple_ks_simulation import simpleSine, simpleCosine
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
