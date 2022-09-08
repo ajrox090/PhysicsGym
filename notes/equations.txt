@@ -1,0 +1,23 @@
+// 9 pages approximately.
+
+Burgers equation (3p)
+- Introduction
+- Problem definition
+	- explain how rl algorithms approach a problem
+	- transition probability
+	- reward
+- Implementation
+- Results 
+
+
+Heat equation (0p)
+- Introduction
+- Problem definition
+- Implementation
+- Results
+
+Kuramoto Sivashinsky (0p)
+- Introduction
+- Problem definition
+- Implementation
+- Results
