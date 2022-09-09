@@ -2,7 +2,7 @@ import gym
 import copy
 import phi.math
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, colors
 from phi import field, vis
 from phi.field import CenteredGrid
 from phi.geom import Box
@@ -37,7 +37,7 @@ class Burgers1DEnvGym(EnvWrapper):
         self.action_space = gym.spaces.Box(low=0, high=255, dtype=np.float32,
                                            shape=self._get_act_shape(
                                                tuple([domain_dict['x']])))  # , domain_dict['y']])))
-        
+
         self.N = N
         self.dt = dt
         self.exp_name = exp_name
@@ -121,17 +121,42 @@ class Burgers1DEnvGym(EnvWrapper):
             self.gt_state = copy.deepcopy(self.init_state)
         super().render()
 
+    def gradient_color(self, frame, frame_count, cmap='RdBu'):
+        import matplotlib.cm as cmx
+        jet = plt.get_cmap(cmap)
+        cNorm = colors.Normalize(vmin=0, vmax=frame_count)
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+        return scalarMap.to_rgba(frame)
+
     def last_render(self):
+        rl_frames = self.physics.trajectory
+        gt_frames = self.goal_trajectory
+        unc_frames = self.raw_trajectory
+        fig, axs = plt.subplots(1, 3, figsize=(18.9, 9.6))
+        axs[0].set_title("Reinforcement Learning")
+        axs[1].set_title("Ground Truth")
+        axs[2].set_title("Uncontrolled")
+        for plot in axs:
+            plot.set_ylim(-2, 2)
+            plot.set_xlabel('x')
+            plot.set_ylabel('u(x)')
+
+        for frame in range(0, self.step_count):
+            frame_color = self.gradient_color(frame, self.step_count)
+            axs[0].plot(rl_frames[frame].data.native('vector,x')[0], color=frame_color, linewidth=0.8)
+            axs[1].plot(gt_frames[frame].data.native('vector,x')[0], color=frame_color, linewidth=0.8)
+            axs[2].plot(unc_frames[frame].data.native('vector,x')[0], color=frame_color, linewidth=0.8)
+        plt.show()
         # render state trajectory
-        temp_t = field.stack(self.physics.trajectory, spatial('time'),
-                             Box(time=len(self.physics.trajectory) * self.dt))  # time=len(trajectory)* dt
-        vis.show(temp_t.vector[0], aspect='auto', size=(8, 3), title='optimal state trajectory')
-        # render goal state trajectory
-        temp_gt = field.stack(self.goal_trajectory, spatial('time'), Box(time=len(self.goal_trajectory) * self.dt))
-        vis.show(temp_gt.vector[0], aspect='auto', size=(8, 3), title='goal state trajectory')
-        # raw state trajectory
-        temp_rt = field.stack(self.raw_trajectory, spatial('time'), Box(time=len(self.raw_trajectory) * self.dt))
-        vis.show(temp_rt.vector[0], aspect='auto', size=(8, 3), title='raw state trajectory')
+        # temp_t = field.stack(self.physics.trajectory, spatial('time'),
+        #                      Box(time=len(self.physics.trajectory) * self.dt))  # time=len(trajectory)* dt
+        # vis.show(temp_t.vector[0], aspect='auto', size=(8, 3), title='optimal state trajectory')
+        # # render goal state trajectory
+        # temp_gt = field.stack(self.goal_trajectory, spatial('time'), Box(time=len(self.goal_trajectory) * self.dt))
+        # vis.show(temp_gt.vector[0], aspect='auto', size=(8, 3), title='goal state trajectory')
+        # # raw state trajectory
+        # temp_rt = field.stack(self.raw_trajectory, spatial('time'), Box(time=len(self.raw_trajectory) * self.dt))
+        # vis.show(temp_rt.vector[0], aspect='auto', size=(8, 3), title='raw state trajectory')
 
     def _build_obs(self) -> np.ndarray:
         curr_data = copy.deepcopy(self.cont_state.data._native)
