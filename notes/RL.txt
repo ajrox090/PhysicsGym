@@ -55,8 +55,6 @@ and the optimal value function is given by
 The RL algorithm uses this optimal value function to choose the best policy that maximizes reward and also minimizes cost.
 
 
-
-- PPO (1p)
 - Examples (3p)
 	1) Navier Stokes equation (Cylinder2DFlowDRL)
 	2) Burgers equation (Phiflow)

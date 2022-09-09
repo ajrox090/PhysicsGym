@@ -1,6 +1,7 @@
 MPC (5-8p) [currently 0p]
 
------------------------------------------------------------------------------------------------------------* Introduction to control theory [1p]
+-----------------------------------------------------------------------------------------------------------
+* Introduction to control theory [1p]
 * Model Predictive control [1p]
 	- basic idea, explain the general idea of algorithm
 	- algorithm
