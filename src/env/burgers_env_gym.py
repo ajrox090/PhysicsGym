@@ -37,7 +37,7 @@ class Burgers1DEnvGym(EnvWrapper):
         self.action_space = gym.spaces.Box(low=0, high=255, dtype=np.float32,
                                            shape=self._get_act_shape(
                                                tuple([domain_dict['x']])))  # , domain_dict['y']])))
-
+        
         self.N = N
         self.dt = dt
         self.exp_name = exp_name

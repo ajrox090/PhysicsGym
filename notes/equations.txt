@@ -1,30 +1,54 @@
-# 9 pages approximately.
+Interface
+    - Physics Interface: how a pde is defined
+    - Environment Interface: interface between rl and pde
+    - Runner Interface: how to run an experiment
 
-Burgers equation (3p)
-    - Introduction
-        Burgers equation is one of the simplest PDEs that describes speed of fluid with respect to time and is given by
-        d/dt u(x,t) = - u(x,t) * d/dx u(x,t) + v * d2/dx2 u(x,t) + F(x,t)
-        Here, u is the velocity field, v is the viscosity of fluid and F is the optional control force.  This viscous
-        burgers equation calculates the change in velocity u(x,t) of a viscous fluid in the presence of an external
-        force. This equation further simplifies to inviscous burgers equation in the presence of inviscous fluid, also
-        used for prototyping equations causing shock-waves in solution.
-        d/dt u(x,t) + u(x,t) * d/dx u(x,t) = 0
-    - Problem definition
-        - explain how rl algorithms approach a problem
-        - transition probability
-        - reward
-    - Implementation
-    - Results
+// 9 pages approximately.
 
-
-Heat equation (0p)
-- Introduction
-- Problem definition
-- Implementation
+Inverse Problem: Burgers equation (3p)
+- Introduction [PBDL]
+    - burgers equation: what it is and its types and how it is used
+    - problem statement and goal of experiment
+- Interface : 
+    - enviornment, physics. How do they apply to this problem
+    - and what others things to implement for this experiment.
+- Problem definition (Application to inverse problems: PBDL)
+    - how to choose observation, action space, transition probability, reward
 - Results
+    - visualization using lviz and showstate?
+- (Documentation: Code Implementation)
+
+Burgers equation is one of the simplest PDEs that describes speed of fluid with respect to time and is given by
+d/dt u(x,t) = - u(x,t) * d/dx u(x,t) + v * d2/dx2 u(x,t) + F(x,t)
+Here, u is the velocity field, v is the viscosity of fluid and F is the optional control force.  This viscous burgers equation calculates the change in velocity u(x,t) of a viscous fluid in the presence of an external force. This equation further simplifies to inviscous burgers equation in the presence of inviscous fluid, also used for prototyping equations causing shock-waves in solution.
+d/dt u(x,t) + u(x,t) * d/dx u(x,t) = 0
+
+In this experiment we are trying to solve an inverse problem using burgers equation. The main goal for RL gent is to learn the forces F(x,t) that helps researching the goal state. Next, we explain how the interface is used to frame this problem as an RL problem. The physics interface for burgers equation is inspired from phiflow's interface of Physics object which consists of initialisation of all dependent variables in the constructor e.g. the viscosity and diffusion information. The next imporant method in the physics interface is the step function where the actual PDE calculations are defined. For example, the step function in burgers equation first performs diffusion of velocity field by taking viscosity into account and then it advects the field onto itself using the semi-langrangian method. After that the control forces are applied on the advected field, technically speaking this adds two fields.
+
+The environment implementation is also very simple. The main variables for the environment contructor are the observation spaces and the action space. For this experiment, the observation space consists of information about velocity fields for current state and goal state, and time step information, which gives the formula x + 2x + 1 where x is the shape of field. Actions are taken in the form of a one dimensional array covering every velocity value which is given by equation prod(x) + len(x). The reset function is called once before the agent starts to learn and it initialises all the variables back to its original state. In this experiment we initialise the velocity with a Gaussian function G=e, and the goal/target state is calculated using the ground truth value of forces defined by another gaussian function that the agent is trying to learn. A reset method always returns an observation of the environment as defined by the observation space.
+
+The final method is the step function that performs three steps. a) convert the actions predicted by agent into the right format that can be processed by physics object. b) update the state by moving the PDE simulation forward in time and by applying forces (actions) c) Calculate the new observation, reward and other relevant information. The reward function here is defined by taking generated forces into account. We use RunningMeanstd by stablebaselines to normalize the reward and the reward is calculated by taking the squared difference of generated forces for each timestep. Additionally, the  distance to the target field, scaled by a predefined factor (FINAL_REWARD_FACTOR) is subtracted at the end of each trajectory.
+
+Heat Invader(0p)
+- Introduction [Heat invader]
+    - heat invader equation, what it is and how it is used?
+    - problem statement and goal of the experiment
+-Problem definition
+    - as defined in heat invader paper.
+- Interface
+    - environment, physics. wrt. problem
+    - other methods needed.
+- Results
+- (Documentation: Code Implementation)
+
 
 Kuramoto Sivashinsky (0p)
-- Introduction
+- Introduction [chaos paper, ks]
+    - what does KS do? what applications?
 - Problem definition
-- Implementation
+    - as defined in chaos paper
+- Interface
+    - environment, physics wrt. problem
+    - other methods needed.
 - Results
+- (Documentation: Code Implementation)
