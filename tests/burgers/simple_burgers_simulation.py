@@ -1,70 +1,87 @@
-import sys
+import numpy as np
+from phi import math
+from phi.field import CenteredGrid, Noise
+from phi.geom import Box
+from phi.math import spatial, extrapolation
+from phi.physics import advect, diffuse
 
-from phi.math import pi
-from copy import deepcopy
+N = 128
+DX = 2. / N
+STEPS = 32
+DT = 1. / STEPS
+NU = 0.01 / (N * np.pi)
 
-from matplotlib import pyplot as plt
-from phi.flow import *
-from src.env.phiflow.burgers import Burgers
+# initialization of velocities, cell centers of a CenteredGrid have DX/2 offsets for linspace()
+INITIAL_NUMPY = np.asarray([-np.sin(np.pi * x) for x in np.linspace(-1 + DX / 2, 1 - DX / 2, N)])  # 1D numpy array
 
-N = 32
-# domain_dict = dict(x=N, y=N, bounds=Box(x=10, y=10), extrapolation=extrapolation.ZERO)
-domain_dict = dict(x=N, extrapolation=extrapolation.PERIODIC)
-step_count = 1
-# viscosity = 0.01 / (N * np.pi)
-viscosity = 0.0005
-dt = 0.01
-diffusion_substeps = 1
-
-
-def officialGaussianClash(x):
-    batch_size = 32
-    leftloc = np.random.uniform(0.2, 0.4)
-    leftamp = np.random.uniform(0, 3)
-    leftsig = np.random.uniform(0.05, 0.15)
-    rightloc = np.random.uniform(0.6, 0.8)
-    rightamp = np.random.uniform(-3, 0)
-    rightsig = np.random.uniform(0.05, 0.15)
-    left = leftamp * math.exp(-0.5 * (x.vector[0] - leftloc) ** 2 / leftsig ** 2)
-    right = rightamp * math.exp(-0.5 * (x.vector[0] - rightloc) ** 2 / rightsig ** 2)
-    result = left + right
-    return result
+INITIAL = math.tensor(INITIAL_NUMPY, spatial('x'))  # convert to phiflow tensor
 
 
-def officialGaussianForce(x):
-    batch_size = 32
-    loc = np.random.uniform(0.4, 0.6, batch_size)
-    amp = np.random.uniform(-0.05, 0.05, batch_size) * 32
-    sig = np.random.uniform(0.1, 0.4, batch_size)
-    result = tensor(amp, x.shape[0]) * math.exp(
-        -0.5 * (x.x.tensor - tensor(loc, x.shape[0])) ** 2 / tensor(sig, x.shape[0]) ** 2)
-    return result
+def f(x):
+    return x.vector['x'] ** 2 / 2
 
 
+# velocity = CenteredGrid(INITIAL, extrapolation.PERIODIC, x=N, bounds=Box(x=(-1, 1)))
+# velocity = CenteredGrid(lambda x: -math.sin(np.pi * x), extrapolation.PERIODIC, x=N, bounds=Box(x=(-1, 1)))
+velocity = CenteredGrid(Noise(), extrapolation.PERIODIC, x=N, bounds=Box(x=(-1, 1)))  # random init
+# velocity = CenteredGrid(f, extrapolation.PERIODIC, x=N, bounds=Box(x=(-1, 1)))  # random init
+vt = advect.semi_lagrangian(velocity, velocity, DT)
 
-def burgers_rkstiff_function(x):
-    u0 = math.exp(-10 * math.sin(x / 2) ** 2)
-    return u0
+print("Velocity tensor shape: " + format(velocity.shape))  # == velocity.values.shape
+print("Velocity tensor type: " + format(type(velocity.values)))
+print("Velocity tensor entries 10 to 14: " + format(velocity.values.numpy('x')[10:15]))
+
+velocities = [velocity]
+age = 0.
+for i in range(STEPS):
+    v1 = diffuse.explicit(velocities[-1], NU, DT)
+    v2 = advect.semi_lagrangian(v1, v1, DT)
+    age += DT
+    velocities.append(v2)
+
+print("New velocity content at t={}: {}".format(age, velocities[-1].values.numpy('x,vector')[0:5]))
+# get "velocity.values" from each phiflow state with a channel dimensions, i.e. "vector"
+vels = [v.values.numpy('x,vector') for v in velocities]  # gives a list of 2D arrays
+
+import pylab
+
+fig = pylab.figure().gca()
+fig.plot(np.linspace(-1, 1, len(vels[0].flatten())), vels[0].flatten(), lw=2, color='blue', label="t=0")
+fig.plot(np.linspace(-1, 1, len(vels[10].flatten())), vels[10].flatten(), lw=2, color='green', label="t=0.3125")
+fig.plot(np.linspace(-1, 1, len(vels[20].flatten())), vels[20].flatten(), lw=2, color='cyan', label="t=0.625")
+fig.plot(np.linspace(-1, 1, len(vels[32].flatten())), vels[32].flatten(), lw=2, color='purple', label="t=1")
+pylab.xlabel('x')
+pylab.ylabel('u')
+pylab.legend()
+pylab.show()
 
 
+def show_state(a, title):
+    # we only have 33 time steps, blow up by a factor of 2^4 to make it easier to see
+    # (could also be done with more evaluations of network)
+    a = np.expand_dims(a, axis=2)
+    for i in range(4):
+        a = np.concatenate([a, a], axis=2)
+
+    a = np.reshape(a, [a.shape[0], a.shape[1] * a.shape[2]])
+    # print("Resulting image size" +format(a.shape))
+
+    fig, axes = pylab.subplots(1, 1, figsize=(16, 5))
+    im = axes.imshow(a, origin='upper', cmap='plasma')
+    pylab.colorbar(im)
+    pylab.xlabel('time')
+    pylab.ylabel('x')
+    pylab.title(title)
+    pylab.show()
 
 
-v = CenteredGrid(burgers_rkstiff_function, **domain_dict)
+vels_img = np.asarray(np.concatenate(vels, axis=-1), dtype=np.float32)
 
-physics = Burgers(default_viscosity=viscosity, diffusion_substeps=diffusion_substeps)
+# save for comparison with reconstructions later on
+# import os;
 
-# for _ in view(play=False, namespace=globals()).range():
-x = v.data._native.reshape(-1)  # initial state
-V = []
-t = [i for i in range(1, x.size + 1)]
-for _ in range(40):
-    v = physics.step(v, dt=dt)
-    dt = 1.5 * dt
-    if _ % 5 == 0:
-        V.append(v.data._native.reshape(-1))
-        # vis.show(v)
-ax = waterfall(x, t, V, figsize=(8, 8))
-ax.grid(False)
-ax.axis(False)
-ax.view_init(50, -100)
-plt.show()
+# os.makedirs("./temp", exist_ok=True)
+# np.savez_compressed("./temp/burgers-groundtruth-solution.npz",
+#                     np.reshape(vels_img, [N, STEPS + 1]))  # remove batch & channel dimension
+
+show_state(vels_img, "Velocity")
