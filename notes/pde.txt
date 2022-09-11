@@ -8,6 +8,10 @@ Although ODEs are useful for modeling many simple physical phenomena, when it co
 
 We now formulate partial differential equations as physical models as described in the book, "Physics based deep learning"[]. In this thesis, we mainly focus on continuous PDEs say P*. The solution of P* lies in the spatial domain /equation/ in d 1,2,3 dimensions. This domain would present a 3d room in case of heat transfer system or a 3d cylinder in case of fluid flow system. The independent variables could be either scalar or vector fields e.g. the pressure can be presented by a scalar field p:RXR->R where as the velocity of a particle at each point in time for a given space is a d-dimensional vector field given by u:R X R -> R. A 3d vector will be represented as u = (ux,uy,uz) where x,y,z->O. In the book [], they have used numerical methods to discretize this continuous pde and then step the pde forward in time with time steps of ^t. We will consider the solution as expressed in the book, u(x,t+^t) = P(ux,uxx,uxxx...x) where ux denotes the spatial derivatives du(x,t)/dx.
 
+
+
+
+
 There are two well known methods for solving pde, analytical methods and numerical methods. In general analytical solutions for a pde problem are exact solutions while numerical solutions are finite approximations. An analytical solution involves well-formed understanding of a problem to calculate this exact solution. For example, consider a pde that can be represented as a linear mapping for multiple odes for which an exact solution is known, an analytical soultion could involve solving these individual odes and then averaging each solution. However, such a solution requires  complete knowledge of how the problem works which is impossible for many continuous problems. Hence, comes numerical solutions to the rescue. Roughly speaking numerical solutions involve framing the problem and using trial and error across a set of candidate solutions [pl*]. This gives satisfactory results especially because often times we are concerned with an approximately good solution rather than an exact solution. There are many numerical methods for solving a pde, viz Finite element method, finite differences method, finite volume, etc. All these methods use discretization to approximate solution to PDE which involves evolving a discrete set of values and by taking small steps in time to approximate the continuous function of space and time[\refx].
 
 Finite difference methods are numerical methods for approximating solutions to a PDE by approximating derivatives with finite differences. For example, consider an ordinary differential equation of the form:
@@ -21,6 +25,12 @@ This constitutes the finite difference equation for this ODE and solving this eq
 
 To understand how the finite difference method works in more detail, we consider the simple laplace equation which can be used to model a variety of problems involving the potential of an unknown variable[\a]. The second-order linear laplace equation is given by
 \equation from my book
+
+
+
+
+
+
 Consider a square grid as the domain, (del i,j)* where i,j represents points in x and y direction of domain respectively. the centeral differences are given by
 \equation from my book
 \equation from my book
@@ -37,6 +47,12 @@ The finite differences method introduced before doesn't work well for irregular 
 The general implementation of finite element method consists of 5 main steps: discretization, element equations, assembly, boundary conditions and solution. The discretization step invovles dividing the domain into finite number of elements e.g.
 For one dimensional domain, a line, the division can be done by divding the line using finite number of points on the line. For two dimensional, one can use traingualr elements or quadrilateral elements and for three dimensional, a plane of a hexahedron shape can be used for discretizing the domain. The second step is to develop differential equations for each discretized elements. This consists of two steps. First, step invovles choice of approximate functions a.k.a. basis functions that is used for approximating the individual elements. For example, consider the following equation of line[],
 \equation
+
+
+
+
+
+
 where u(x) is the dependent variable, a0 and a1 are the constants and x is the independent variable. Here, the dependent variable can be written as a linear combination of approximate functions as follows,
 u = N1u1 + N2u2
 where u1 and u2 are the approximate functions with,
@@ -44,6 +60,11 @@ where u1 and u2 are the approximate functions with,
 The next step is to find the right value for quoeficients that can help solve the problem optimally which involves methods like variational approach and the method of weighing residuals[b]. Once the individual element functions are developed, they are assembled in the next step which invovles combining all the individual element equations into one unified equation that represents the entire system. Then, the boundary conditions are applied on this unified system before finally solving the system using methods like LU decomposition.[b]
 
 Next we will discuss 4 PDEs, burgers euqation for fluid flow, heat equation for temperature change, Navier-Stokes equation for fluid flow and Kuramoto-Sivashinsky equation for flame.
+
+
+
+
+
 
 Burgers Equation is one of the simplest PDEs describing the velocity of fluid with respect to time and is given by,
 \equation
@@ -56,6 +77,21 @@ Fig1 shows the time evolution of initial w.r.t. velocity for a time period of t=
 
 PDE control applications:There are some control applications where an external force is applied on this system governed by burgers equation with a goal to dampen shockwaves(ref)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Heat Equation
 The heat equation is a simple diffusion equation that calculates the change in the temperature at each point in space for that particular time and is given by,
 \equation
@@ -64,6 +100,21 @@ Here, u is the temperature at each point x in space at time t, D is the diffusiv
 Consider a simulation of heat transfer in a pre-heated rod. We assume that the rod is insulated i.e. there is no exchange of heat between the rod and the environment from outside of the rod and the two ends of rod are at a constant temperature of 0 degrees. Now we know from the law of conservation of energy that the exchange of heat occurs from hotter areas to colder areas untill the temperature is constant at every point in the field. Fig1 and 2, showcase this phenomena. Fig1, shows the simulation of heat transfer inside the rod for a finite number of steps. It is evident from the line plot that the local maximas move downwards towards 0 as they are at higher temperature than their neighbors while the local minimas move upwards towards 0, both stabilizing near 0. Fig2 shows this evolution w.r.t. spaec and time. This plot also shows the diffusion between hotter areas inside the rod in yellow and the colder areas in blue as the time passes.
 
 Considering the control problems involving heat equation, this equation is sometimes used in conjunction with other equations in an application. For example, if we are talking about controlling the temperature of a room with a fan, the airflow from a fan can be calculated by Navier Stokes equation or Burgers equation and the temperature change is calculated with heat equation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Kuramoto Sivashinsky: is a fourth order convection-diffusion equation that helps model physical phenoma like flame fronts, fluid flow and more. One property of KS equation is that with the increase in domain complexity, the stability of system decreases.
 4) Navier stokes: Navier stokes is one of the biggest equation modeling fluid flow in Physics. It uses velocity of fluid and pressure as parameter and show the change in these quantities in the presence of a force. This equation is in particularly used for control applications related to fluid flow problems like drag reduction and lift reduction.
