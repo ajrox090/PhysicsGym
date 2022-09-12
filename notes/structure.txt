@@ -1,6 +1,6 @@
-Thesis Structure (39p):
+Thesis Structure (40p):
 
-0) Abstract         (1p)
+Abstract         (1p)
 
 1) Introduction     (2p)
 
@@ -33,22 +33,26 @@ Thesis Structure (39p):
         - economic MPC
     5.4) Example convection-diffusion eqn   (2)
 
-6) RL                   (7p)
-    6.1)Introduction    (1p)
-    6.2)MDP             (1.5p)
-    6.3)PDE as MDP      (1p)
+6) RL                       (7p)
+    6.1) Introduction       (1p)
+    6.2) MDP                (1.5p)
+    6.3) PDE as MDP         (1p)
+    6.4) Applications       (3.5p)
+        - Cylinder2DflowControl (Navier Stokes equation)
+        - The Heat Invader problem (Heat Equation)
+        - Stabilizing Kuramoto Sivashinsky Equation
 
-7) RL vs MPC            (2p)  [** content collection PENDING]
+7) RL vs MPC            (2p)
     7.1) Similarities   (2/3p)
     7.2) Differences    (2/3p)
     7.3) RL with MPC    (2/3p)
 
 --------- Interface Chapters (11p) ------------------
 
-8) UPB-PDE-RL Interface              (2 1/3p)
-    8.1) Introduction           (1/3p)
-    8.2) Physics Interfaces     (2/3p)
-    8.3) Environment Interfaces (1 1/3p)
+8) UPB-PDE-RL Interface             (2 1/3p)
+    8.1) Introduction               (1/3p)
+    8.2) Physics Interfaces         (2/3p)
+    8.3) Environment Interfaces     (1 1/3p)
         - (Runner*)
 
 9) Experiments                          (9p)
@@ -62,3 +66,6 @@ Thesis Structure (39p):
     9.5) Evaluation RL vs MPC           (1p)
 
 10) Conclusion                  (1p)
+11) Github Documentation
+
+References
