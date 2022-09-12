@@ -1,0 +1,64 @@
+Thesis Structure (39p):
+
+0) Abstract         (1p)
+
+1) Introduction     (2p)
+
+2) Related Work     (2p)
+
+------- Foundational Chapters (22p) ---------
+
+3) PDE (5p)
+    3.1) Introduction   (1p)
+    3.2) Solving PDEs   (2p)
+        - Finite difference method
+        - Finite elements method 
+    3.3) PDE examples   (2p)
+        - Burgers and heat equation with visualisation
+
+4) Feedback Control                     (3p)
+    4.1) Introduction                   (1.5p)
+        - open-loop vs closed-loop
+        - optimal control problem
+    4.2) Methods for feedback control   (1.5p)
+        - conventional methods:     PID
+        - Iterative methods:        MPC
+        - Machine Learning methods: RL
+
+5) MPC                                      (5p)
+    5.1) Introduction to control using MPC  (1p)
+    5.2) MPC algorithm                      (1p)
+    5.3) MPC problems                       (1)
+        - stabilizing MPC
+        - economic MPC
+    5.4) Example convection-diffusion eqn   (2)
+
+6) RL                   (7p)
+    6.1)Introduction    (1p)
+    6.2)MDP             (1.5p)
+    6.3)PDE as MDP      (1p)
+
+7) RL vs MPC            (2p)  [** content collection PENDING]
+    7.1) Similarities   (2/3p)
+    7.2) Differences    (2/3p)
+    7.3) RL with MPC    (2/3p)
+
+--------- Interface Chapters (11p) ------------------
+
+8) UPB-PDE-RL Interface              (2 1/3p)
+    8.1) Introduction           (1/3p)
+    8.2) Physics Interfaces     (2/3p)
+    8.3) Environment Interfaces (1 1/3p)
+        - (Runner*)
+
+9) Experiments                          (9p)
+    - RL control experiments            
+    9.1) Burgers 1D                     (2p)
+    9.2) Heat equation control          (2p)
+    9.3) Kuramoto Sivashinsky control   (2p)
+    - MPC control experiments           
+    9.4) Burgers 1D                     (2p)
+    
+    9.5) Evaluation RL vs MPC           (1p)
+
+10) Conclusion                  (1p)

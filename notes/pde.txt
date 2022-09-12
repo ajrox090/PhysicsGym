@@ -1,4 +1,4 @@
-PDE (3p) [currently: 2p]
+PDE [5p] (currently ~5p)
 
 Partial differential equations (PDE) are used to mathematically formulate laws of physics that involve multiple variables. They are used to describe physical phenomenas like flow of fluid inside a cylinder, heat dissipation, propagation of sound waves, electrodynamics, etc. Technically speaking the three main components forming a PDE are multiple independent variables, an unknown function of these variables and the partial derivatives of this function. Before diving into PDE, lets understand a more simple form of differential equations called Ordinary differential equations (ODE) that are made up of only a single independent variable. It also consists of an unknown function and its partial derivatives that describes the change in a physical quantity with respect to time.
 
@@ -6,10 +6,12 @@ ODEs can be used to model some interesting physical phenomena like movement of e
 
 Although ODEs are useful for modeling many simple physical phenomena, when it comes to complex systems, it is not enough to represent a physical system by using just a single variable. For such purposes, partial differential equations compe into play. As described earlier, PDEs consists of two or more variables used to model more complex physical systems. One such example is a convection-diffusion equation  /equation/.  Here, u is the independent variable which represents velocity of fluid, or temperature in a heat transfer system. D is the diffusivity constant e.g. diffusivity of a particle in motion, thermal diffusivity or viscosity in terms of fluid flow and v is the velocity of particle w.r.t time. When the diffusivity represents the viscosity of fluid, the above equation becomes viscous burgers equaiton which represents velocity of particle at each point in time using a convection-diffusion mechanicsm.
 
-We now formulate partial differential equations as physical models as described in the book, "Physics based deep learning"[]. In this thesis, we mainly focus on continuous PDEs say P*. The solution of P* lies in the spatial domain /equation/ in d 1,2,3 dimensions. This domain would present a 3d room in case of heat transfer system or a 3d cylinder in case of fluid flow system. The independent variables could be either scalar or vector fields e.g. the pressure can be presented by a scalar field p:RXR->R where as the velocity of a particle at each point in time for a given space is a d-dimensional vector field given by u:R X R -> R. A 3d vector will be represented as u = (ux,uy,uz) where x,y,z->O. In the book [], they have used numerical methods to discretize this continuous pde and then step the pde forward in time with time steps of ^t. We will consider the solution as expressed in the book, u(x,t+^t) = P(ux,uxx,uxxx...x) where ux denotes the spatial derivatives du(x,t)/dx.
+We now formulate partial differential equations as physical models as described in the book, "Physics based deep learning"[]. In this thesis, we mainly focus on continuous PDEs say P*. The solution of P* lies in the spatial domain /equation/ in d 1,2,3 dimensions. This domain could present a 3d room in case of heat transfer system or a 3d cylinder in case of fluid flow system. The independent variables could be either scalar or vector fields e.g. the pressure can be presented by a scalar field p:RXR->R where as the velocity of a particle at each point in time for a given space is a d-dimensional vector field given by u:R X R -> R. A 3d vector will be represented as u = (ux,uy,uz) where x,y,z->O. In the book [], they have used numerical methods to discretize this continuous pde and then step the pde forward in time with time steps of ^t. We will consider the solution as expressed in the book, u(x,t+^t) = P(ux,uxx,uxxx...x) where ux denotes the spatial derivatives du(x,t)/dx.
 
+Solving PDEs
 There are two well known methods for solving pde, analytical methods and numerical methods. In general analytical solutions for a pde problem are exact solutions while numerical solutions are finite approximations. An analytical solution involves well-formed understanding of a problem to calculate this exact solution. For example, consider a pde that can be represented as a linear mapping for multiple odes for which an exact solution is known, an analytical soultion could involve solving these individual odes and then averaging each solution. However, such a solution requires  complete knowledge of how the problem works which is impossible for many continuous problems. Hence, comes numerical solutions to the rescue. Roughly speaking numerical solutions involve framing the problem and using trial and error across a set of candidate solutions [pl*]. This gives satisfactory results especially because often times we are concerned with an approximately good solution rather than an exact solution. There are many numerical methods for solving a pde, viz Finite element method, finite differences method, finite volume, etc. All these methods use discretization to approximate solution to PDE which involves evolving a discrete set of values and by taking small steps in time to approximate the continuous function of space and time[\refx].
 
+Finite Difference Method
 Finite difference methods are numerical methods for approximating solutions to a PDE by approximating derivatives with finite differences. For example, consider an ordinary differential equation of the form:
 \equation in my book
 The Euler's method for solving this equation is given by
@@ -21,11 +23,6 @@ This constitutes the finite difference equation for this ODE and solving this eq
 
 To understand how the finite difference method works in more detail, we consider the simple laplace equation which can be used to model a variety of problems involving the potential of an unknown variable[\a]. The second-order linear laplace equation is given by
 \equation from my book
-
-
-
-
-
 
 Consider a square grid as the domain, (del i,j)* where i,j represents points in x and y direction of domain respectively. the centeral differences are given by
 \equation from my book
@@ -40,14 +37,10 @@ Similarly rest of the equations can be calculated for other values of i,j in the
 
 The finite differences method introduced before doesn't work well for irregular geometry, complex boundary conditions or for heterogenous compositions[]. For this, the alternative is finite element method which first divides the solution domain into elements which are simpler in shape and then finds an approximate solution for each element function thereby assembling them into a unified solution. As in the previous method, we provide a brief description of steps involved in solving a PDE with finite element method. For more thorough explanation one may refer to chapter 31 of the book "Numerical methods for engineers"
 
+Finite Elements Method
 The general implementation of finite element method consists of 5 main steps: discretization, element equations, assembly, boundary conditions and solution. The discretization step invovles dividing the domain into finite number of elements e.g.
 For one dimensional domain, a line, the division can be done by divding the line using finite number of points on the line. For two dimensional, one can use traingualr elements or quadrilateral elements and for three dimensional, a plane of a hexahedron shape can be used for discretizing the domain. The second step is to develop differential equations for each discretized elements. This consists of two steps. First, step invovles choice of approximate functions a.k.a. basis functions that is used for approximating the individual elements. For example, consider the following equation of line[],
 \equation
-
-
-
-
-
 
 where u(x) is the dependent variable, a0 and a1 are the constants and x is the independent variable. Here, the dependent variable can be written as a linear combination of approximate functions as follows,
 u = N1u1 + N2u2
@@ -61,7 +54,7 @@ Next we will discuss 4 PDEs, burgers euqation for fluid flow, heat equation for 
 
 
 
-
+PDE Examples
 Burgers Equation is one of the simplest PDEs describing the velocity of fluid with respect to time and is given by,
 \equation
 where u is the velocity field and v is the viscosity of fluid. When viscosity is 0, this equation simplifies to inviscous burgers equation which is a prototype for equations that develop shockwaves.
