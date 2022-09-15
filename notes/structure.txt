@@ -26,12 +26,17 @@ Abstract         (1p)
         - Machine Learning methods: RL
 
 5) MPC                                      (5p)
-    5.1) Introduction to control using MPC  (1p)
-    5.2) MPC algorithm                      (1p)
-    5.3) MPC problems                       (1)
-        - stabilizing MPC
-        - economic MPC
-    5.4) Example convection-diffusion eqn   (2)
+    5.1) Introduction to control using MPC [1]  (1p)         [Thursday]
+        - What is Mpc
+        - Recent work of MPC success in PDE control
+        - define problem as in [main:2.1]
+    5.2) MPC algorithm                      (1p)                [Thursday]
+        - [main: 2.2]
+    5.3) MPC problems                       (1)                 [Friday]
+        - stabilizing MPC [1:2.3.1]
+        - economic MPC    [1:2.3.2]
+    5.4) Example convection-diffusion eqn   (2)                 [Friday]
+        - [main: 2.4]
 
 6) RL                       (7p)
     6.1) Introduction       (1p)
@@ -42,10 +47,10 @@ Abstract         (1p)
         - The Heat Invader problem (Heat Equation)
         - Stabilizing Kuramoto Sivashinsky Equation
 
-7) RL vs MPC            (2p)
-    7.1) Similarities   (2/3p)
-    7.2) Differences    (2/3p)
-    7.3) RL with MPC    (2/3p)
+7) RL vs MPC                                            (2p)    [Saturday]
+    7.1) Similarities [1 and more in 1's related work]  (2/3p)
+    7.2) Differences [1]                                (2/3p)
+    7.3) RL with MPC [1 and more in 1's related work]   (2/3p)
 
 --------- Interface Chapters (11p) ------------------
 
@@ -69,3 +74,5 @@ Abstract         (1p)
 11) Github Documentation
 
 References
+rl_mpc_1: https://www.sciencedirect.com/science/article/pii/S0306261921015932?via%3Dihub
+mpc_1: https://epub.uni-bayreuth.de/4905/1/published_version.pdf
