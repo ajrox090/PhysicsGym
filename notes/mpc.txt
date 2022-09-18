@@ -1,8 +1,8 @@
-MPC (5-8p) [currently 0p]
+MPC (5-8p) [currently 3p]
 
 -----------------------------------------------------------------------------------------------------------
-* Introduction to control theory [1p]
-* Model Predictive control [1p]
+* Introduction to control theory [1p] (1p)
+* Model Predictive control [1p] (0.5p)
 	- basic idea, explain the general idea of algorithm
 	- algorithm
 	- some explanations
@@ -14,7 +14,7 @@ MPC (5-8p) [currently 0p]
 	- stabilizing mpc
 	- economic mpc
 
-* convection diffusion pde [1p]
+* convection diffusion pde [1p] (1.5p)
 	- intro
 	- boundary condition
 	- problem statement
@@ -51,6 +51,67 @@ approx 1 page pending
 - Talk about stabilizing mpc vs economic mpc?
 - talk about different classes of MPC problems? from
 https://www.researchgate.net/publication/324748527_DIFFERENT_PROBLEM_CLASSES_AND_SOLUTION_TECHNIQUES_FOR_MODEL_PREDICTIVE_BUILDING_CONTROL
+
+
+
+
+
+
+
+Example
+In this section we discuss how to frame a convection diffusion equation control problem as an MPC problem. We discuss one of the two scenarios described in [] of bilinear optimal control problem, where control is applied using boundary control and controlled convection term in a 1D domain.
+
+Convection-diffusion equation [3p]
+	- problem statement
+	- weak form
+
+	- Solution
+		- spatial discretization using Galerkin method
+		- time discretization using implicit euler
+		- finite dimensional optimal control problem
+
+Convection diffusion equation models the change in physical elements like velocity, temperature in a physical dynamic system in the presence of convective and diffusive processes. Specifically in the problem disscussed here, this equation models the dispersion of temperature inside a room by conductive heat transfer (eg. radiatio) and convective transfer induced by velocity field (eg. air flow) [] and is given by,
+\equation
+\equation
+\equation
+where the domain (e.g. room) xxxx, T>0 are the number of time steps. uuu is the temperature at each point in xxx, D is the diffusion coefficient, v: xxxxxx is the velocity field and u0: xxxxxx is the initial temperature distribution. Here, the diffusion term is xxxxx and the convection term is xxxx. Note that the names of some quantities have been changed from what is originally mentioned in [] to keep the notation consistent with rest of the thesis.
+
+As mentioned in section PDE, in order to solve any pde, the boundary conditions must be specified. In this scenario, the temperature inside the room is influenced by the outside temperature and so the boundary conditions are given by,
+\equation
+\equation
+\equation
+\equation
+The boundaries conditions can be divided into two parts, TC and Tout, Tc is the one that can be controlled by setting the temperature inside the room by using some form of heating or cooling and Tout is the one that cannot be controlled but is given by the temperature outside the room. Also, for PDEs the two types of boundary conditions, dirichlet and neumann can be inforced by choosing the value of V appropriately. For example, if Vxxxx means setting the temperature at each point in the boundary to some value from function Dc and represents the Dirichlet boundary condition. While, V=0, represents the neumann boundary condition where the temperature at each point on the boundary is 0.
+
+Using the above setting, the problem statement can be defined as follows, Control the temperature inside the room such that it lies within the lower and upper bounds uxx and uxx while minimizing the cost of control actions (e.g. total energy used).
+This results in two control actions being performed one at the boundary and the other using the velocity field e.g. a ventilator/fan inside the room. The optimal control problem is then given by[],
+\equation
+\equation
+\equation
+\equation
+\equation
+\equation
+\equation
+\equation
+\equation
+
+Next, we briefly discuss the solution to this minimization problem. For detailed in-depth derivation of terms, we refer to the paper []. In short the approach used in the original paper is called first-discretize-then-optimize approach and involves five steps.
+	i) From strong form to weak form
+	ii) Spatial discretization by Galerkin method
+	iii) time discretization by implicit euler method
+	iv) discretization of cost function
+	v) solving the discretized problem by finite element method
+There are two types of solutions for a pde, strong form and weak form. Generally speaking, the strong form solution involves satisfying both dirichlet and neumann boundary conditions and thats makes it harder to calculate while the weak form solution invovles only satisfying the dirichlet boundary conditions. Generally speaking, the weak form involves integrating the equation after multiplying with weighted function to identify those terms in the equation whose derivatives can be balanced. The idea behind spatial discretization using Galerkin method is to represent the a function as linear combination of basis functions. This is equivalent to finite element method discussed in section PDE and involves subdividing the domain O into subsets Ki, e.g. by triangulation. Later polynomial trial functions are applied on each subset[]. This reduces the PDE into nonlinear ODEs.
+
+
+
+
+
+
+
+
+
+
 
 
 

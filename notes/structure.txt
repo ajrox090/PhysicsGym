@@ -1,8 +1,37 @@
+Improvements:
+    
+    * Start each section, of atleast 2 pages, with an introduction paragraph that summarizes what was discussed previously and what is happening next
+
+    * Algorithm for introduction:
+        - write each subsection yourself as much as you can about the topic.
+        - calculate error:
+                J := min [actual page count - expected page count]
+        - optimal solution
+
+
+
 Thesis Structure (40p):
 
 Abstract         (1p)
 
-1) Introduction     (2p)
+1) Introduction     (2p)   (formal in a philosophical way)
+    1.1) pde control    (1/2)
+        1.2.1) what is pde control and why is it relevant?
+        1.2.2) some applications of pde control for chaotic systems[Kuramoto Sivashinsky] and complex fluid systems[Cylinder2DFlowDRL] such as HVAC [HeatInvader]
+    1.2) mpc    (1/2)
+        1.2.1) what is mpc and its success stories
+        1.2.2) why does mpc work and its limitations
+    1.3) rl     (1/2)
+        1.3.1) what is RL and its success stories
+        1.3.2) why does RL work and its limitations
+    1.4) thesis (1/2)
+        1.4.1) describe the current usage of rl in the `pde control` field and motivate the need for  an interface.
+        1.4.2) my main contributions with this thesis:
+            1) interface (physics and environment interface)
+                - how did I design the interface, what considerations did we take into account?
+            2) what can the interface be used for ?
+                - and what not?
+        1.4.3) how is the rest of the thesis arranged?
 
 2) Related Work     (2p)
 
@@ -47,10 +76,13 @@ Abstract         (1p)
         - The Heat Invader problem (Heat Equation)
         - Stabilizing Kuramoto Sivashinsky Equation
 
-7) RL vs MPC                                            (2p)    [Saturday]
-    7.1) Similarities [1 and more in 1's related work]  (2/3p)
-    7.2) Differences [1]                                (2/3p)
-    7.3) RL with MPC [1 and more in 1's related work]   (2/3p)
+7) RL vs MPC [~2p]       (3hrs)                   
+    7.0) short introduction?                  
+    7.1)                                  (4/3)
+        - fig and fundamental difference (terminology) (fig using the example given by professor) (2/3) [1hr]
+        - approach difference                   (fig using the example given by professor) (2/3) [0.5hr]
+        - EXTRA: computational effort and model difference.
+    7.4) rl with mpc concepts so far       (2/3) [1.5hr]
 
 --------- Interface Chapters (11p) ------------------
 
@@ -71,8 +103,15 @@ Abstract         (1p)
     9.5) Evaluation RL vs MPC           (1p)
 
 10) Conclusion                  (1p)
+    - what did we do so far?
+    - what more can be done?
 11) Github Documentation
 
 References
 rl_mpc_1: https://www.sciencedirect.com/science/article/pii/S0306261921015932?via%3Dihub
 mpc_1: https://epub.uni-bayreuth.de/4905/1/published_version.pdf
+
+
+
+
+
