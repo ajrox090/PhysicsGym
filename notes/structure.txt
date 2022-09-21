@@ -49,7 +49,7 @@ Abstract         (1p)
 
 --------- Interface Chapters (11p) ------------------
 
-8) UPB-PDE-RL Interface             (2 1/3p)
+8) Physics-Gym Interface            (2 1/3p)
     8.1) Introduction               (1/3p)
     8.2) Physics Interfaces         (2/3p)
     8.3) Environment Interfaces     (1 1/3p)

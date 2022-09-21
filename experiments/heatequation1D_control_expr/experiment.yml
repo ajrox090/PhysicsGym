@@ -1,9 +1,9 @@
 env:
   N: 64
-  step_count: 64
+  step_count: 100
   diffusivity: 0.01
   final_reward_factor: 32
-  dt: 0.01
+  dt: 1.0
 
 agent:
   num_epochs: 100
