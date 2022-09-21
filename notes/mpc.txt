@@ -1,20 +1,17 @@
 MPC (5-8p) [currently 3p]
 
 -----------------------------------------------------------------------------------------------------------
-* Introduction to control theory [1p] (1p)
-* Model Predictive control [1p] (0.5p)
+* Introduction [1p] (1p)
+* Model Predictive control [0.5p] (0.5p)
 	- basic idea, explain the general idea of algorithm
 	- algorithm
 	- some explanations
 
-* MPC problems [1.5p]
-	- closed loop system define
-	- costs
-	- optimal value of cost
+* MPC problems [0p]
 	- stabilizing mpc
 	- economic mpc
 
-* convection diffusion pde [1p] (1.5p)
+* convection diffusion pde [1.5p] (1.5p)
 	- intro
 	- boundary condition
 	- problem statement
@@ -24,28 +21,39 @@ MPC (5-8p) [currently 3p]
 
 
 Model predictive control is a powerful optimization strategy for feedback control that involves using a system model to predict the control variables of a dynamic system. It is a very flexible procedue where if we have a system model as in fig. we run the forecasts of this model forward in time for different actuation strategies u and using MPC we can optimize over the control input u over a short time period to determine the next immediate control action. Once, the contorl action is applied in the first time step, MPC iteratively calculates the next control action for the new forecasted system state.
-MPC has been used in industry for process control since 1980s. One main reason is that it can handle MIMO systems, where multiple input and output variables of a system are interdependent. Simple controller like PID, failt to optimally control such systems especially when there are many interdependent input/output variables. MPC can also handle constraints which is nothing but a limitation on choice of control parameters that resembles a real world scenario. For example, consider a control problem of keeping an autnomous car in the right lane, the constraints for speed could be, the speed cannot exceed the speed limit in that area and another could be, the car must maintain a certain safe distance from other cars. MPC can also incorporate future reference information into the control problem to improve controller performance. Despite these benefits, MPC does require a powerful and fast processor since it solves this optimization problem in an online manner at each timestep.
+MPC has been used in industry for process control since 1980s. One main reason is that it can handle MIMO systems, where multiple input and output variables of a system are interdependent. Simple controllers like PID, fail to optimally control such systems especially when there are many interdependent input/output variables. MPC can also handle constraints which is nothing but a limitation on choice of control parameters that resembles a real world scenario. For example, consider a control problem of keeping an autnomous car in the right lane, the constraints for speed could be, the speed cannot exceed the speed limit in that area or the car must maintain a certain safe distance from other cars. MPC can also incorporate future reference information into the control problem to improve controller performance. Despite these benefits, MPC does require a powerful and fast processor since it solves this optimization problem in an online manner at each timestep.
 
 Now that we have established the general idea behind MPC, lets go into more details by first defining the problem being solved and then the MPC algorithm along with its important components. We will refer to the problem as defined in thesis: x that uses MPC for partial differential equation control. Consider a continuous-time control system,
 \equation
-where x which represents the state of system at time t and u the control action. Given an initial state x0, iteratively applying f leads to a number of different states known as state trajectories for example, for controls u, the state trajectories are x. A control problem for such a system could be to select the control actions that take the system to a desired behavior. Here, the desired behavior could either be to stabilize the system to a predefined state of to prevent the system from entering a certain region[]. In general the desired behavior of a system can be modelled by an optimal control problem which comes from optimal control theory where the main goal is to find a control for a dynamical system such that an objective function is optimized. The objective function (aka. cost function) is basically a mapping from state and action space to a one-dimensional numerical value and is given by J,
+where x which represents the state of system at time t and u the control action. Given an initial state x0, iteratively applying f leads to a number of different states known as state trajectories for example, for controls u, the state trajectories are x. A control problem for such a system could be to select the control actions that take the system to a desired behavior. Here, the desired behavior could either be to stabilize the system to a predefined state or to prevent the system from entering a certain region[]. In general the desired behavior of a system can be modelled by an optimal control problem which comes from optimal control theory where the main goal is to find a control for a dynamical system such that an objective function is optimized. The objective function (aka. cost function) is basically a mapping from state and action space to a one-dimensional numerical value and is given by J,
+\equation a.1
+In the above cost function, l should be selected in such a way that it penalizes the deviation from target state. This results in the goal of finding the control sequence uU that minimizes this deviation. Hence, the optimal control problem becomes,
 \equation
-In the above cost function, l should be selected in such a way that it penalizes the deviation from target state. This results in the goal of finding the control sequence uU that minimizes this deviation. Hence, the optimal control problem becomes,One more important step to make this control problem more realistic is to apply constraints on the type of values for state and actions. As mentioned earlier, constraints are important for the system to resemble real world behavior. Here, lets say that the set of allowed state and actions are represented by X and U respectively and U is defined as follows,
+One more important step to make this control problem more realistic is to apply constraints on the type of values for state and actions. As mentioned earlier, constraints are important for the system to resemble real world behavior. Here, lets say that the set of allowed state and actions are represented by X and U respectively and U is defined as follows,
 \equation
 The final optimal control problem then becomes,
 \equation
 Although this is a continuous time problem, MPC aka, receding horizon control, can solve such problems by operating over a finite horizon in time.
 
 
-The basic idea behind MPC is to solve the optimal control problem for a finite number of steps NN. This results in the following control sequence.
+MPC generates the trajectory for infinite horizon by solving optimal control problem using the cost function for a finite number of steps N<N and subsequently updating the horizon by selecting only the first action from the resulting control sequences. The finite cost function and the resulting control sequences are given by [],
 \equation
-Out of these control sequences, only the first value is used as the optimal action. There on, the optimal control is applied on the system and the system moves forward in time. Then, the optimization problem is solved again and the next best actions are chosen for this shifted horizon. This is an iterative process and is done indefinitely in an online manner. The following algorithm showcases these steps formally, as proposed in [].
+\equation
+The state of the system is used as input for the optimizer and the optimizer will result in the new control actions, making the state as the feedback and the resulting trajectory of states as the closed-loop trajectory.
+
+The following algorithm showcases these steps formally, as proposed in [].
 Algorithm1
 For each time instant k = 0, 1, ...
 	i) Measure the current state x = x(t) of the system
 	ii) Solve the optimal control problem in order to obtain the optimal control sequence
 	iii) Apply the first element of un as a control to the system during the next sampling period
 	iv) set k = k + 1, and repeat from beginning
+
+In order to take the future costs of actions into account, the optimal value function comes into play which compares the cost at each step with the best cost of each action for an infinite horizon. However, for analysis of stability and performance, optimal value function for a finite horizon is considered in [] and is given by,
+\equation
+
+
+
 
 approx 1 page pending
 - Talk about stabilizing mpc vs economic mpc?
