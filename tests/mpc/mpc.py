@@ -91,7 +91,7 @@ y_ref2[np.where(t2 <= 2.0), 0] = 1.0
 print('Solve (I) via MPC with T = {:.1f} ...'.format(T))
 
 
-# Refdefine J_I with shorter reference trajectory
+# Redefine J_I with shorter reference trajectory
 def J_I_MPC(u_, y0_, y_ref_):
     # calculate trajectory using the time-T-map Phi
     y_ = np.zeros((p + 1, 2))
@@ -137,6 +137,7 @@ def GaussianForce(x):
         -0.5 * (x.x.tensor - tensor(loc, x.shape[0])) ** 2 / tensor(sig, x.shape[0]) ** 2)
     return result
 
+
 # initialize arrays for MPC solution
 yI_MPC = np.zeros((nt2, 2))
 yI_MPC[0, :] = y0
@@ -158,6 +159,32 @@ for i in tqdm(range(nt2)):
     gt_y = physics.step(gt_y, effects=(forces,))
     y_reference.append(gt_y)
 
+
+# cost function, weighted difference between trajectories
+# p is the prediction horizon
+def J(u_, y0_, y_ref_):
+
+    # step1: update the environment for the prediction horizon p using given control u
+    y_ = [y0_]
+    for _ in range(p):
+        y0_ = CenteredGrid(y0_, **domain_dict)
+        f_ = FieldEffect(CenteredGrid(u_, **domain_dict), ['velocity'])
+        y0_ = physics.step(y0_, dt=dt, effects=(f_,))
+        y_.append(y0_.data.native("vector,x")[0])
+    y_ = np.array(y_)
+
+    # step2: select the reference trajectories
+    y_ref_2 = np.array(y_ref_[:y_.shape[0]])
+
+    # step3: calculate weighted difference between trajectories
+    dy = y_ - y_ref_2
+    dyQ = np.zeros(dy.shape[0], dtype=float)
+    for ii in range(dy.shape[1]):
+        dyQ += Q[ii] * np.power(dy[:, ii], 2)
+
+    return dt * np.sum(dyQ)
+
+
 # box constraints u_min <= u <= u_max
 bounds = Bounds(u_min * np.ones(p, dtype=float), u_max * np.ones(p, dtype=float))
 # MPC loop
@@ -168,10 +195,10 @@ for i in tqdm(range(nt2)):
     # if ie - i < p, then the remaining entries are
     # constant and identical to the last given one
     ie = np.min([nt2, i + p + 1])
-
+    ny_init = y_initial.data.native("vector,x")[0]
+    ny_ref = y_reference[i].data.native("vector,x")[0]
     # call optimizer
-    res = minimize(lambda utmp: J_I_MPC(utmp, y_initial.data.native("vector,x")[0],
-                                        y_reference[i].data.native("vector,x")[0]), u0, method='SLSQP', bounds=bounds)
+    res = minimize(lambda utmp: J_I_MPC(utmp, ny_init, ny_ref), u0, method='SLSQP', bounds=bounds)
 
     # retrieve first entry of u and apply it to the plant
     uI_MPC[i] = res.x[0]
