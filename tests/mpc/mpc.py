@@ -1,119 +1,46 @@
 import copy
-
 import numpy as np
-import time
+from tqdm import tqdm
 
+from phi.geom import Box
 from phi import vis, math
 from phi.field import CenteredGrid
-from phi.geom import Box
 from phi.math import extrapolation, tensor
 from phi.physics._effect import FieldEffect
+
 from scipy.optimize import minimize
 from scipy.optimize import Bounds
-from tqdm import tqdm
 
 from src.env.physics.burgers import Burgers
 
-h = 1e-2  # Time step of integrator
-facU = 1  # Factor by which dt is larger
-dt = facU * h  # Coarse time step for SUR
-T = 1.0  # Final time
-dimY = 2  # dimension of state space
-
-u_min = -10.0  # lower bound for control
-u_max = 10.0  # upper bound for control
-
-V = [u_min, u_max]  # finite set of admissible controls in (II) and (III)
-nu = len(V)  # dimension of V
-
-Q = [1.0, 0.1]  # weights on the diagonal of the Q-matrix in the objective function
-
-y0 = [1.0, 0.0]  # initial condition for y
-
-nt = round(T / h) + 1  # number of time steps on fine grid
-nt2 = round(T / dt) + 1  # number of time steps on coarser grid for SUR
-
-t = np.linspace(0.0, T, nt)  # array of time steps (fine grid)
-t2 = np.linspace(0.0, T, nt2)  # array of time steps (coarse grid)
-
-u0 = np.zeros(nt, )  # initial guess for control u
-
-y_ref = np.zeros((nt, 2))  # reference trajectory on fine grid
-y_ref2 = y_ref[::facU, :]  # reference trajectory on coarse grid
-
-
-def rhs(y_, u_):
-    alpha, beta, delta = -1.0, 1.0, -0.1
-    return np.array([y_[1], -delta * y_[1] - alpha * y_[0] - beta * y_[0] * y_[0] * y_[0] + u_])
-
-
-def ODE(u_, y0_):
-    y_ = np.zeros((u_.shape[0], dimY), dtype=float)
-    y_[0, :] = y0_
-    for ii in range(u_.shape[0] - 1):
-        k1 = rhs(y_[ii, :], u_[ii])
-        k2 = rhs(y_[ii, :] + h / 2 * k1[:], u_[ii])
-        k3 = rhs(y_[ii, :] + h / 2 * k2[:], u_[ii])
-        k4 = rhs(y_[ii, :] + h * k3[:], u_[ii])
-        y_[ii + 1, :] = y_[ii, :] + h / 6 * (k1[:] + 2 * k2[:] + 2 * k3[:] + k4[:])
-    return y_
-
-
-def Phi(u_, y0_):
-    # Integration with constant input over one time step of the coarse grid
-    u2 = u_ * np.ones((facU + 1), dtype=float)
-    y_ = ODE(u2, y0_)
-    return y_[-1, :]
-
-
-def coarseGridToFine(x_):
-    if facU == 1:
-        return x_
-    y_ = np.zeros(nt, dtype=float)
-    for ii in range(nt2 - 1):
-        y_[facU * ii: facU * (ii + 1)] = x_[ii]
-    y_[-1] = x_[-1]
-    return y_
-
+# *[1] todo: Explain what the GaussianForce function represents here.
+# *[2] todo: Explain the cost function
+"""
+    what is the problem? 
+        For a   domain D (of varying sizes [32,64,..]),
+                timestep of 0.01, 
+                the initial state is sampled from GaussianClashFunction*[1]
+        control the evolution of environment, by minimizing the following cost function.*[2]
+"""
+N = 32
+dt = 0.01
+visc = 0.003  # viscosity
+ph = 40  # prediction horizon
+domain_dict = dict(x=N, bounds=Box[-1:1], extrapolation=extrapolation.PERIODIC)
+physics = Burgers(default_viscosity=visc)
 
 p = 20  # Prediction horizon on coarse grid
-T = 10.0  # New final time
+T = 1.0  # New final time
 nt2 = round(T / dt) + 1  # number of time steps on coarser grid for SUR
-t2 = np.linspace(0.0, T, nt2)  # array of time steps (coarse grid)
-
-# new reference trajectory
-y_ref2 = np.zeros((nt2, 2))
-y_ref2[np.where(t2 <= 8.0), 0] = -0.5
-y_ref2[np.where(t2 <= 6.0), 0] = 0.5
-y_ref2[np.where(t2 <= 4.0), 0] = -1.0
-y_ref2[np.where(t2 <= 2.0), 0] = 1.0
-
-print('Solve (I) via MPC with T = {:.1f} ...'.format(T))
+u_min = -10.0  # lower bound for control
+u_max = 10.0  # upper bound for control
+Q = [1.0, 0.1]  # weights on the diagonal of the Q-matrix in the objective function
 
 
-# Redefine J_I with shorter reference trajectory
-def J_I_MPC(u_, y0_, y_ref_):
-    # calculate trajectory using the time-T-map Phi
-    y_ = np.zeros((p + 1, 2))
-    y_[0, :] = y0_
-    for ii in range(p):
-        y_[ii + 1, :] = Phi(u_[ii], y_[ii, :])
-
-    # fill up reference trajectory if necessary
-    y_ref_2 = np.zeros(y_.shape)
-    y_ref_2[:y_ref_.shape[0], :] = y_ref_
-
-    # calculate weighted difference between trajectories
-    dy = y_ - y_ref_2
-    dyQ = np.zeros(dy.shape[0], dtype=float)
-    for ii in range(dy.shape[1]):
-        dyQ += Q[ii] * np.power(dy[:, ii], 2)
-
-    return dt * np.sum(dyQ)
-
-
+# ** what is the initial state? : is defined based on the goal. One could start from a suboptimal initial state and
+# learn its way to goal state.
 def GaussianClash(x):
-    batch_size = 32
+    batch_size = N
     leftloc = np.random.uniform(0.2, 0.4, batch_size)
     leftamp = np.random.uniform(0, 3, batch_size)
     leftsig = np.random.uniform(0.05, 0.15, batch_size)
@@ -128,8 +55,15 @@ def GaussianClash(x):
     return result
 
 
+# intial state
+y0_pf = CenteredGrid(GaussianClash, **domain_dict)
+y0_native = y0_pf.data.native("vector,x")[0]
+
+
+# ** what is the goal state? : goal of the problem and also decides on how to choose a cost function.
+
 def GaussianForce(x):
-    batch_size = 32
+    batch_size = N
     loc = np.random.uniform(0.4, 0.6, batch_size)
     amp = np.random.uniform(-0.05, 0.05, batch_size) * 32
     sig = np.random.uniform(0.1, 0.4, batch_size)
@@ -138,73 +72,80 @@ def GaussianForce(x):
     return result
 
 
-# initialize arrays for MPC solution
-yI_MPC = np.zeros((nt2, 2))
-yI_MPC[0, :] = y0
-uI_MPC = np.zeros(nt2)
-
-# initial guess for first optimization problem
-u0 = 0.5 * (u_max + u_min) * np.ones(p) + 0.1 * (np.random.rand(p) - 0.5) * (u_max - u_min)
-N = 32
-viscosity = 0.01 / (N * np.pi)
-domain_dict = dict(x=N, bounds=Box[-1:1], extrapolation=extrapolation.PERIODIC)
-physics = Burgers(default_viscosity=viscosity)
-y_initial = CenteredGrid(GaussianClash, **domain_dict)
-forces = FieldEffect(CenteredGrid(GaussianForce, **domain_dict), ['velocity'])
-# calculate reference trajectories for minimizer
-gt_y = copy.deepcopy(y_initial)
-y_reference = [gt_y]
-print("calculating reference trajectories\n")
+# GaussianForce as phiflow.FieldEffect.
+g_f_pf = FieldEffect(CenteredGrid(GaussianForce, **domain_dict), ['velocity'])
+# calculate ground truth trajectories
+gt_trajectories = []
+y_gt_pf = copy.deepcopy(y0_pf)
+# def calc_gt_trajectories(x0_):
 for i in tqdm(range(nt2)):
-    gt_y = physics.step(gt_y, effects=(forces,))
-    y_reference.append(gt_y)
+    y_gt_pf = physics.step(y_gt_pf, dt=dt, effects=(g_f_pf,))
+    gt_trajectories.append(y_gt_pf.data.native("vector,x")[0])
+gt_traj_np = np.array(gt_trajectories)
 
 
-# cost function, weighted difference between trajectories
-# p is the prediction horizon
-def J(u_, y0_, y_ref_):
+# ** What is the cost function? : simply, the weighted difference between trajectories
+
+def J(u_, y_0_native: np.array, y_gt_native: np.ndarray):
+    """
+        step1 -> update the environment for finite number of prediction horizon in the presence of control element u_
+        step2 -> extract target trajectories from y_gt_native of size = prediction horizon
+        step3 -> calculate weighted difference
+    """
 
     # step1: update the environment for the prediction horizon p using given control u
+    y0_ = copy.deepcopy(y_0_native)
     y_ = [y0_]
-    for _ in range(p):
-        y0_ = CenteredGrid(y0_, **domain_dict)
-        f_ = FieldEffect(CenteredGrid(u_, **domain_dict), ['velocity'])
+    for _ in tqdm(range(p)):
+        y00_ = math.tensor(y0_.reshape(y0_pf.data._native.shape), y0_pf.shape)
+        y0_ = CenteredGrid(y00_, **domain_dict)
+        u0_ = math.tensor(u_.reshape(y0_pf.data._native.shape), y0_pf.shape)
+        f_ = FieldEffect(CenteredGrid(u0_, **domain_dict), ['velocity'])
         y0_ = physics.step(y0_, dt=dt, effects=(f_,))
-        y_.append(y0_.data.native("vector,x")[0])
+        y0_ = y0_.data.native("vector,x")[0]
+        y_.append(y0_)
     y_ = np.array(y_)
 
     # step2: select the reference trajectories
-    y_ref_2 = np.array(y_ref_[:y_.shape[0]])
+    y_ref = np.array(y_gt_native[:y_.shape[0]])
 
     # step3: calculate weighted difference between trajectories
-    dy = y_ - y_ref_2
+    dy = y_ - y_ref
     dyQ = np.zeros(dy.shape[0], dtype=float)
-    for ii in range(dy.shape[1]):
+    # for ii in range(dy.shape[1]):
+    for ii in range(1):
         dyQ += Q[ii] * np.power(dy[:, ii], 2)
 
     return dt * np.sum(dyQ)
 
 
+# ** MPC loop
+
+# intial guess for first optimization problem
+u0 = CenteredGrid(GaussianForce, **domain_dict).data.native("vector,x")[0]
 # box constraints u_min <= u <= u_max
-bounds = Bounds(u_min * np.ones(p, dtype=float), u_max * np.ones(p, dtype=float))
-# MPC loop
-print("Starting MPC loop\n")
+bounds = Bounds(u_min * np.ones(N, dtype=float), u_max * np.ones(N, dtype=float))
+
+y_ = copy.deepcopy(y0_native)
+u_ = np.zeros((nt2, N))
+y_traj = np.zeros((nt2, N))
+y_traj[0] = y_
+print("shape", u0.shape)
 for i in tqdm(range(nt2)):
 
-    # determine maximum entry of reference trajectory
-    # if ie - i < p, then the remaining entries are
-    # constant and identical to the last given one
-    ie = np.min([nt2, i + p + 1])
-    ny_init = y_initial.data.native("vector,x")[0]
-    ny_ref = y_reference[i].data.native("vector,x")[0]
     # call optimizer
-    res = minimize(lambda utmp: J_I_MPC(utmp, ny_init, ny_ref), u0, method='SLSQP', bounds=bounds)
+    res = minimize(lambda utmp: J(utmp, y_, gt_traj_np), u0, method='SLSQP', bounds=bounds)
 
     # retrieve first entry of u and apply it to the plant
-    uI_MPC[i] = res.x[0]
+    u_[i] = res.x[0]
+    # apply above control on environment
     if i < nt2 - 1:
-        yI_MPC[i + 1, :] = Phi(uI_MPC[i], yI_MPC[i, :])
-
+        y_ = physics.step(y_, dt=dt, effects=(u_[i],))
+        y_traj[i + 1] = copy.deepcopy(y_)
     # update initial guess
     u0[:-1] = res.x[1:]
     u0[-1] = res.x[-1]
+
+# visualize results
+for y in y_traj:
+    vis.show(y)
