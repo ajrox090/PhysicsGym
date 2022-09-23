@@ -19,11 +19,8 @@ class Burgers(Physics):
 
     @staticmethod
     def step_velocity(v, viscosity, dt, effects, diffusion_substeps):
-        try:
-            v = diffuse.explicit(field=v, diffusivity=dt * viscosity,
-                                 dt=dt, substeps=diffusion_substeps)
-        except Exception as E:
-            print("")
+        v = diffuse.explicit(field=v, diffusivity=dt * viscosity,
+                             dt=dt, substeps=diffusion_substeps)
         # v = diffuse.fourier(field=v, diffusivity=viscosity,
         #                     dt=dt)
         v = advect.semi_lagrangian(v, v, dt)
