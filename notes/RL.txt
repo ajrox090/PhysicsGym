@@ -2,7 +2,7 @@ RL (expected 8-10p) [currently 3.3p]
 
 - Introduction (1p)
 
-Reinforcement learning is a field of machine learning that aims at solving goal oriented problems by direct interaction with the environment. An RL framework consists of an agent that learns a task by interacting with a predefined environment. This learning happens by evaluating the rewards for each action taken. The agent then chooses actions in the direction of minimizing the cummulative rewards. There are three important characteristics of RL as highlighted in the book"". i) RL problems are closed loop problems since the action influence future inputs. ii) the agent chooses an action on its own without being explicitly told which action to take and iii) the action taken at time t, also influcences the future state of environments and rewards.
+Reinforcement learning is a field of machine learning that aims at solving goal oriented problems by interacting with an environment that represents a physical system. The RL framework consists of an agent that learns to control a dynamic system through feedback obtained from interacting with system's environment. This learning requires two things i) the rewards received for each control action taken, called the immediate rewards and ii) a discounted cumulative sum of rewards accounting for future information e.g. a value function. The goal of an agent then is to choose actions in the direction of maximizing this cummulative sum of rewards. This ability to choose actions that influence a system by using feedback of the system, makes reinfrocement learning much suitable for closed-loop problems.
 
 The basic idea behind solving a reinforcement learing problem is that the agent with the help of partial observation is that the agent with the help of partial observation of the environment interacts with the environment by performing an action. This interaction modifies the state of a system and in return gives the agent feedback in the form of rewards. The agent then learns a certain task through this feedback. This interaction-feedback approach is very different from other forms of learning. Supervised and unsupervised learning. In supervised learning the main goal is to infer a model by using a set of labelled training dataset prepared specifically for a problem. Since this model is used to predict future states, the training data must comprise of a set of all diverse possibilities of actions in order to predict unkwon states accurately. For interactive problems, obtaining such a trainng data is not always practical making supervised learning approach implausible for such problems. Reinforcement learning also differs from unsupervised learning which foucsses on finding hidden structures in unlabelled data. Although RL also uses unlabelled data, there is a difference in terms of goal. The goal in RL is to maximize a reward function, however the technique of finding hidden structures in data can enhance the cabailities of RL.
 
@@ -14,7 +14,7 @@ In recent years, reinforcement learning gained widespread popularity with its ab
 
 
 - Components of RL (0.5-1p)
-There are six main components of RL as described in the book[], an environment, an agent, a policy, reward signal, a value function and optionally a model. For the physics problems in focus here, an environment can be considered as the description of the physical world expressed by a single or a combination of partial differential equations. In general an environment consists of state of the system and holds the properties of observability and interactivability. Here observability because the agent must be able to partially observe the environment and the latter because the agent should be able to influence the state of environment with its actions.
+There are six main components of RL as described in the book[], an environment, an agent, a policy, reward signal, a value function and optionally a model. For the physics problems in focus here, an environment can be considered as the description of the physical world expressed by a single or a combination of partial differential equations. An environment can be perceived as a simulation of a physical system and is represented by its state at a certain time. It also holds the properties of observability, i.e. the agent is able to observe it even if partially and interactivability, i.e. the agent is able to influence the state of environment with its actions.
 
 The agent is the learner and decision maker. At each timestep, the agent interacts with the environment and the environment updates its state and responses in the form of a scalar value called reward. The goal of the agent is to maximize this reward. This forms the entire specification of a reinforcement learning problem. Following the technical specification as in the book[], consider the agent interacts with the environment for a sequence of timesteps t=1,2,3,.... At each timestep t, the agent receives a partial observation of environment state given by St->S, where S is a set of all possible states. Using St, the agent selects an action At->A(St) where A(St) is the set of all possible actions for state St. This results in a new state St+1 and in return agent receives a scalar reward of form R>R. The act of choosing the actions is done using a mapping from states to probability of each action. A policy determines, the porability of each action for a given state from the action space and selects the ations with highest probability to maximize the cumulative reward. The main learning task for agent is how to update the policy.
 
@@ -55,11 +55,20 @@ and the optimal value function is given by
 The RL algorithm uses this optimal value function to choose the best policy that maximizes reward and also minimizes cost.
 
 
-- Examples (3p)
-	1) Navier Stokes equation (Cylinder2DFlowDRL)
-	2) Burgers equation (Phiflow)
-	3) Heat Equation (heat invader)
-	4) Kuramoto Sivashinsky equation
+- Examples (5p)
+	1) Navier Stokes equation (Cylinder2DFlowDRL) (1 2/3)
+		- problem statement (2/3)
+		- problem formulation (2/3)
+		- results (1/3)
+	2) Burgers equation (Phiflow) (0p)
+	3) Heat Equation (heat invader) (1 2/3)
+		- problem statement (2/3)
+		- problem formulation (2/3)
+		- results (1/3)
+	4) Kuramoto Sivashinsky equation (1 1/3)
+		- problem statement (1/3)
+		- problem formulation (2/3)
+		- results (1/3)
 
 
 
