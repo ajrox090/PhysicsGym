@@ -56,45 +56,44 @@ The RL algorithm uses this optimal value function to choose the best policy that
 
 
 - Examples (5p)
-	1) Navier Stokes equation (Cylinder2DFlowDRL) (1 2/3)
-		- problem statement (2/3)
-		- problem formulation (2/3)
-			- domain specification, inflow profile
-			- drag caclulation
-			- lift calculation
-			- jets (actuation)
-			- reward 
-		- results (1/3)
+	1) Navier Stokes equation (1 2/3)
 	2) Burgers equation (1 2/3p)
-	(Deep Reinforcement Learning for Online Control of Stochastic Partial Differential Equations
-	https://openreview.net/pdf?id=TjECt9pAr4s)
-		- problem statement (2/3)
-		- problem formulation (2/3)
-		- results (1/3)
-	4) Kuramoto Sivashinsky equation (1 1/3)
-	(Control of chaotic systems by Deep Reinforcement Learning
-	https://arxiv.org/pdf/1906.07672.pdf)
-		- problem statement (1/3)
-		- problem formulation (2/3)
-		- results (1/3)
+	3) Kuramoto Sivashinsky equation (1 2/3)
 
-Cylinder2DflowControl
+		- optimal control problem (2/3)
+			- mathematically define what the goal is and formulate the application of control as optimal control problem. i.e. minimizing J
+			- is the problem clear? have you explained each part of the problem and reasons behind it at every relevant places?
+		- formulate PDE as MDP (2/3)
+			- Environment
+				- domain specification, inflow profile
+				- drag calculation
+				- lift calculation
+				- reward
+			- Control
+				- jets (actuation)
+		- conclusion (1/3)
+	
+	- Cylinder2DFlowDRL (https://arxiv.org/pdf/1808.07664.pdf)
+	- Deep Reinforcement Learning for Online Control of Stochastic Partial Differential Equations (https://openreview.net/pdf?id=TjECt9pAr4s)
+	- Control of chaotic systems by Deep Reinforcement Learning (https://arxiv.org/pdf/1906.07672.pdf)
+
+1) Navier Stokes equation (Cylinder2DFlowDRL)
 In the paper "Artificial neural network trained through deep reinforcement learning discover control strategies for active flow control", the authors showcase a very first successful application of reinforcement learning using neural networks to control vortex shredding inside a cylinderical domain. This is the result of solving two problems, drag reduction and wake reduction. Our aim in this section is to analyze how to express a PDE control problems as MDP problems and the experiment in this paper serves as a good groundwork for such an analysis. The experiment consists of 2D simulation of Karman vortex street in a domain of 
 Environment:
-	- 	experiment - 2D simulation - Karman vortex street
-	- 	domain - box: L(22 x-axis), H (4.1 y-axis)
-	- 	cylinder - D=1 - vortex shedding
-	- 	Boundary conditions:
+		- experiment - 2D simulation - Karman vortex street
+		- domain - box: L(22 x-axis), H (4.1 y-axis)
+		- cylinder - D=1 - vortex shedding
+		- Boundary conditions:
 			- left wall - inflow - parabolic
 			- top & bottom - no slip boundary condition
 			- right wall - outflow boundary condition
-	- 	instantaneous drag and lift - formula
-	- 	drag coefficient and lift - formula
-	- 	physics - PDE - Navier-stokes equation
+		- instantaneous drag and lift - formula
+		- drag coefficient and lift - formula
+		- physics - PDE - Navier-stokes equation
 
 Agent:
-	-	control - 2 jets - location
-	- 	velocity profile - parabolic
+	- control - 2 jets - location
+	- velocity profile - parabolic
 	- properties of jet flow - synthetic jet conditions
 	- indirect flow control vs direct flow control
 	- apply conditions - low actuation

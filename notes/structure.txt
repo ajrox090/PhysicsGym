@@ -70,7 +70,9 @@ Abstract         (1p)
 6) RL                       (7p)
     6.1) Introduction       (1p)
     6.2) MDP                (1.5p)
+        - components: Environment, action space, reward, policy, value function and discount factor
     6.3) PDE as MDP         (1p)
+        - Heat invader
     6.4) Applications       (3.5p)
         - Cylinder2DflowControl (Navier Stokes equation)
         - The Heat Invader problem (Heat Equation)

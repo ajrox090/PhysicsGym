@@ -78,7 +78,7 @@ Convection-diffusion equation [3p]
 		- time discretization using implicit euler
 		- finite dimensional optimal control problem
 
-Convection diffusion equation models the change in physical elements like velocity, temperature in a physical dynamic system in the presence of convective and diffusive processes. Specifically in the problem disscussed here, this equation models the dispersion of temperature inside a room by conductive heat transfer (eg. radiatio) and convective transfer induced by velocity field (eg. air flow) [] and is given by,
+Convection diffusion equation models the change in physical elements like velocity, temperature in a physical dynamic system in the presence of convective and diffusive processes. Specifically in the problem disscussed here, this equation models the dispersion of temperature inside a room by conductive heat transfer (eg. radiation) and convective transfer induced by velocity field (eg. air flow) [] and is given by,
 \equation
 \equation
 \equation
