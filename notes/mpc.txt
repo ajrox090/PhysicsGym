@@ -5,7 +5,7 @@ MPC (5-8p) [currently 3p]
 * Model Predictive control [0.5p] (0.5p)
 	- basic idea, explain the general idea of algorithm
 	- algorithm
-	- some explanations
+	- some explanationsu
 
 * MPC problems [0p]
 	- stabilizing mpc
@@ -20,12 +20,20 @@ MPC (5-8p) [currently 3p]
 -----------------------------------------------------------------------------------------------------------
 
 
-Model predictive control is a powerful optimization strategy for feedback control that involves using a system model to predict the control variables of a dynamic system. It is a very flexible procedue where if we have a system model as in fig. we run the forecasts of this model forward in time for different actuation strategies u and using MPC we can optimize over the control input u over a short time period to determine the next immediate control action. Once, the contorl action is applied in the first time step, MPC iteratively calculates the next control action for the new forecasted system state.
-MPC has been used in industry for process control since 1980s. One main reason is that it can handle MIMO systems, where multiple input and output variables of a system are interdependent. Simple controllers like PID, fail to optimally control such systems especially when there are many interdependent input/output variables. MPC can also handle constraints which is nothing but a limitation on choice of control parameters that resembles a real world scenario. For example, consider a control problem of keeping an autnomous car in the right lane, the constraints for speed could be, the speed cannot exceed the speed limit in that area or the car must maintain a certain safe distance from other cars. MPC can also incorporate future reference information into the control problem to improve controller performance. Despite these benefits, MPC does require a powerful and fast processor since it solves this optimization problem in an online manner at each timestep.
+Model predictive control is a powerful optimization strategy for feedback control and has been around since 1980s. It involves using a system model to predict optimal control variables of a dynamic system.
+One factor for its popularity is the ability to handle multiple-input multiple-output (MIMO) systems, which the simple controllers like PID fail to optimally control, especially when there are multiple dependent input/output variables. 
+Another factor is its ability to incorporate constraints which can involve limiting the domain of control parameters that resembles a real world scenario. For example, consider a control problem of keeping an autonomous car in the desired lane. The plant is the environment in which car is driven e.g. the road with cars in different lanes and the control parameter is the speed of car being controlled. So, a boundary condition could be, the speed of car cannot exceed the speed limit which can be incorporated in MPC by bounding the domain of speed of the car with the speed limit.
+Despite these benefits, MPC does require a powerful and fast processor since it solves the optimization problem in an online manner at each timestep. 
 
-Now that we have established the general idea behind MPC, lets go into more details by first defining the problem being solved and then the MPC algorithm along with its important components. We will refer to the problem as defined in thesis: x that uses MPC for partial differential equation control. Consider a continuous-time control system,
-\equation
-where x which represents the state of system at time t and u the control action. Given an initial state x0, iteratively applying f leads to a number of different states known as state trajectories for example, for controls u, the state trajectories are x. A control problem for such a system could be to select the control actions that take the system to a desired behavior. Here, the desired behavior could either be to stabilize the system to a predefined state or to prevent the system from entering a certain region[]. In general the desired behavior of a system can be modelled by an optimal control problem which comes from optimal control theory where the main goal is to find a control for a dynamical system such that an objective function is optimized. The objective function (aka. cost function) is basically a mapping from state and action space to a one-dimensional numerical value and is given by J,
+figure 
+
+Figure \ref{fig:mpcmain} shows the basic block diagram of a system using MPC as a controller. It involves a system $y(u, t) = f(x,u,t)$ and control input $u(t) = g(x,t)$. MPC controller solves the optimization problem of minimizing a cost function for a certain prediction horizon leading to the prediction of an optimal action for that time-step given by $u$. Once the contorl action is applied it then iteratively calculates the next control action for the new forecasted system state.
+This establishes the general idea behind MPC, in the rest of the section we define the components of MPC like cost function along with the optimal control problem and the MPC algorithm as discussed in the thesis[] that uses MPC for partial differential equation control.
+
+\begin{equation*}
+    x(k+1) = f(x(k),u(k)) \text{ for } k \in \mathbf{N}
+\end{equation*}
+where x which represents the state of system at time k and u the control action. Given an initial state $x_0$, iteratively applying $f$ leads to a number of different states known as state trajectories. For example, for control u, the state trajectories are represented by variable x. A control problem for such a system could be to select the control actions that take the system to a desired behavior. Here, the desired behavior could either be to stabilize the system to a predefined state or to prevent the system from entering a certain region[]. In general the desired behavior of a system can be modeled by an optimal control problem which comes from optimal control theory where the main goal is to find a control for a dynamical system such that an objective function is optimized. The objective function (aka. cost function) is basically a mapping from state and action space to a one-dimensional numerical value and is given by J,
 \equation a.1
 In the above cost function, l should be selected in such a way that it penalizes the deviation from target state. This results in the goal of finding the control sequence uU that minimizes this deviation. Hence, the optimal control problem becomes,
 \equation
@@ -103,13 +111,7 @@ This results in two control actions being performed one at the boundary and the 
 \equation
 \equation
 
-Next, we briefly discuss the solution to this minimization problem. For detailed in-depth derivation of terms, we refer to the paper []. In short the approach used in the original paper is called first-discretize-then-optimize approach and involves five steps.
-	i) From strong form to weak form
-	ii) Spatial discretization by Galerkin method
-	iii) time discretization by implicit euler method
-	iv) discretization of cost function
-	v) solving the discretized problem by finite element method
-There are two types of solutions for a pde, strong form and weak form. Generally speaking, the strong form solution involves satisfying both dirichlet and neumann boundary conditions and thats makes it harder to calculate while the weak form solution invovles only satisfying the dirichlet boundary conditions. Generally speaking, the weak form involves integrating the equation after multiplying with weighted function to identify those terms in the equation whose derivatives can be balanced. The idea behind spatial discretization using Galerkin method is to represent the a function as linear combination of basis functions. This is equivalent to finite element method discussed in section PDE and involves subdividing the domain O into subsets Ki, e.g. by triangulation. Later polynomial trial functions are applied on each subset[]. This reduces the PDE into nonlinear ODEs.
+Next, we briefly discuss the solution to this minimization problem. For detailed in-depth derivation of terms, we refer to the paper []. In short the approach used in the original paper is called first-discretize-then-optimize approach and involves first calculating the weak form of the equation which involves integrating the equation after multiplying with weighted function to identify those terms in the equation whose derivatives can be balanced. The next step is to discretize in space using Galerkin method which represents the function as linear combination of basis functions. This is equivalent to finite element method discussed in section PDE and involves subdividing the domain O into subsets Ki, e.g. by triangulation. Later polynomial trial functions are applied on each subset[]. This reduces the PDE into nonlinear ODEs.
 
 
 

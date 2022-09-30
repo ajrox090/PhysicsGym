@@ -5,7 +5,7 @@ Improvements:
 
 
 Thesis Structure (40p):
-                        (41p)    [17 1/3p]     33 days (5weeks)
+                        (41p)    [18 1/3 p]     33 days (5weeks)
 ---------------------------------------------
 - Abstract              (1p)     [-]
 - Introduction          (2p)     [-]
@@ -13,9 +13,9 @@ Thesis Structure (40p):
 --------------------------------------------- 10 days (1.5 weeks)
 - PDE                   (6p)     [6p]
 - Feedback Control      (2p)     [2 1/3p]
-- MPC                   (5p)     [3p]
+- MPC                   (5p)     [3.5p]
 - RL                    (8p)     [3.5p]
-- RL vs MPC             (2p)     [1.5p]
+- RL vs MPC             (2p)     [2p]
 --------------------------------------------- 17 days (2.5 weeks)
 - Physics-Gym interface (2.5p)   [1p]
 - Experiments           (8p)     [-]
