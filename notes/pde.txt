@@ -1,6 +1,83 @@
 PDE [5p] (currently ~5p)
+3) PDE (5p)
+    3.0) Introduction   (1p)
+    3.1) Solving PDEs   (2p)
+        - Finite difference method
+        - Finite elements method 
+    3.2) PDE examples   (2p)
+        - Burgers and heat equation with visualisation
 
-Partial differential equations (PDE) are used to mathematically formulate laws of physics that involve multiple variables. They are used to describe physical phenomenas like flow of fluid inside a cylinder, heat dissipation, propagation of sound waves, electrodynamics, etc. Technically speaking the three main components forming a PDE are multiple independent variables, an unknown function of these variables and the partial derivatives of this function. Before diving into PDE, lets understand a more simple form of differential equations called Ordinary differential equations (ODE) that are made up of only a single independent variable. It also consists of an unknown function and its partial derivatives that describes the change in a physical quantity with respect to time.
+3.0) Introduction
+    - what are partial differential equations?
+    Partial differential equations are mathematical tools for formulating laws of physics representing complex dynamical systems involving more than one variables.
+
+    - what are they used for?
+    They are used to model equations describing  physical phenomena like flow of fluid inside a cylinder given by Navier Stokes equation[], propagation of sound waves given by the wave equation[], dissipation of heat, electrodynamics, etc. 
+
+    - components of PDE
+    In general a partial differential equation consists of i) one or more independent variables, which represent the physical quantity of system like velocity or temperature of a particle, ii) an unknown smooth and continuous function of those variables and iii) the partial derivatives of this function. The order of a partial differential equation represents the highest derivative of the unknown function
+    
+    - example + explanation of each component including (laplacian operators)
+    Consider a simple linear parabolic partial differential equation known as heat equation
+    $u_t - u_{xx} = 0$
+    here, u is the unknown function and uxx represents the second order derivative of u.
+
+
+    - what are ordinary differential equations?
+    Before diving into PDE, lets understand a more simple form of differential equations called Ordinary differential equations (ODE) consisting of only a single independent variable. It also consists of an unknown function and its partial derivatives that describes the change in a physical quantity with respect to time. ODEs can be used to model some interesting physical phenomena like movement of electricity, to and fro motion of a pendulum, and various concepts related to exchange of energy in a simple system. 
+    
+    - some examples
+    A simple ODE is given by $dy/dt = ky$; where $k$ is a constant and y is the independent variable. The solution to this ode can be given by $y(t) = C e^{(kt)}$ where $C$ is a constant. This solution represents exponential growth and decay for $k>0$ and $k<0$ respectively. Another simple ode representing wave propagation with a degree of 2 is given by $d^2y/dt^2 + W^2y = 0$; here w represents the constant frequency of oscillation of particles forming the wave. A solution to this ODE can be given by $y(t) = A sin(wt + O/)$ where, A is the amplitude of the wave and $O/$ is the phase. This ODE represents a simple harmonic motion of a particle exhibiting periodic behavior in time.
+
+    - limitations of ode
+    Although ODEs are useful for modeling many simple physical phenomena, when it comes to complex systems, it is not enough to represent a physical system by using just a single variable.
+
+    - convection diffusion equation
+    For such purposes, partial differential equations come into play. As described earlier, PDEs consists of two or more variables used to model more complex physical systems. One such example is a convection-diffusion equation,
+    \begin{equation*}
+        \pdv{u(x,t)}{t} = D \cdot \pdv[2]{u(x,t)}{x} - u(x,t) \cdot \pdv{u(x,t)}{x} 
+    \end{equation*}
+    Here, u is the independent variable which represents velocity of fluid, or temperature in a heat transfer system. D is the diffusivity constant e.g. diffusivity of a particle in motion, thermal diffusivity or viscosity in terms of fluid flow and v is the velocity of particle w.r.t time. When the diffusivity represents the viscosity of fluid, the above equation becomes viscous burgers equation which represents velocity of particle at each point in time using a convection-diffusion mechanism.
+
+    - what are boundary constraints?
+    Differential equations can have infinitely many solutions. For example, consider the equation of curve $\frac{dy}{dx} = x^2$, with a general solution of $y = \frac{x^3}{3} + c$ where c is some arbitrary constant. Here, infinite solutions exist because c can be any integer. In order to get a unique solution, external constraints need to be imposed which involves specifying bounds to the domain of solutions. For the above example, we only consider the curve that goes through point $(x,y) = (0,1)$, then the only solution that satisfies this condition is with $c=1$, $y = \frac{x^3}{3} + 1$. For initial value problems[], these constraints require specifying only the initial value of the unknown function while for Boundary value problems require conditions for each boundary in the domain. In this thesis we will focus on boundary value problems and there are three types of boundary conditions normally encountered in the solution of partial differential equations namely, Dirichlet boundary conditions, Neumann boundary conditions and Robin boundary conditions.
+
+    - Dirichlet and Neumann constraints
+    Dirichlet boundary condition, aka. first-type boundary condition specifies the values that an unknown function needs to take on along the boundary of the domain. E.g. talking about heat diffusion in a room, if the temperature at walls is specified by a function $f$, this implies Dirichlet boundary conditions and if the temperature is sepcificed by the normal derivative of the function on a surface, its called Neuamann boundary condition.
+
+    - "something about solutions to PDE"
+    In the following section we will discuss different methods for solving partial differential equations using boundary conditions.
+
+3.1) Solving PDEs
+    - methods for solving PDEs
+    - analytical methods: 
+        - explanation
+        - example
+        - limitations
+    - numerical methods: 
+        - explanation
+        - example
+        - advantages
+        - types
+    3.1.1) Finite Difference method
+        - what is finite difference method
+        - ode example
+        - pde example: Laplace Equation
+            - problem setup
+            - boundary conditions
+            - solution
+    3.1.2) Finite Elements method
+        - what is finite elements method
+        - what are steps involved in solving a PDE using FEM
+        - ode example?
+        - pde example?
+3.2) PDE Examples
+    (Burgers, Heat, NavierStokes, Kuramoto Sivashinsky)
+    - introduce PDEs used through out this thesis
+    - visualization for a finite time period
+    - applcation to control
+
+Partial differential equations (PDE) are used to mathematically formulate laws of physics that involve multiple variables. They are used to describe physical phenomena like flow of fluid inside a cylinder, heat dissipation, propagation of sound waves, electrodynamics, etc. Technically speaking the three main components forming a PDE are multiple independent variables, an unknown function of these variables and the partial derivatives of this function. Before diving into PDE, lets understand a more simple form of differential equations called Ordinary differential equations (ODE) that are made up of only a single independent variable. It also consists of an unknown function and its partial derivatives that describes the change in a physical quantity with respect to time.
 
 ODEs can be used to model some interesting physical phenomena like movement of electricity, to and fro motion of a pendulum, and various concepts related to exchange of energy in a simple system. A simple ODE is given by dy/dt = ky; where k is a constant and y is the independent variable. The solution to this ode can be given by y(t) = C e^(kt) where C is a constant. This solution represents exponential growth and decay for k>0 and k<0 respectively. Another simple ode representing wave propagation with a degree of 2 is given by: d2y/dt3 + W2y = 0; w represents the constant frequency of oscilation of particles forming the wave. A solution to this ODE can be given by: y(t) = A sin(wt + O/); Here, A is the amplitude of the wave and O/ is the phase. This ODE represents a simple harmonic motion of a particle exhibiting periodic behavior in time.
 

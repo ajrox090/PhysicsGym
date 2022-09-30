@@ -1,13 +1,33 @@
-Feedback Control: (2p) [currently 1.5p]
+Feedback Control: (2p) [currently 1.5p] 
 
-PID (ref: http://d-scholarship.pitt.edu/8171/1/AngLi20100628.pdf)
-MPC (ref: https://eng.libretexts.org/Bookshelves/Industrial_and_Systems_Engineering/Book%3A_Chemical_Process_Dynamics_and_Controls_(Woolf)/12%3A_Multiple_Input_Multiple_Output_(MIMO)_Control/12.03%3A_MIMO_using_model_predictive_control#:~:text=handle%20structural%20changes.-,Disadvantages%20of%20MPC,not%20handle%20input%20disturbances%20well.)
+todo: 
 
-Feedback control is a technique which involves influencing the future I/O behavior of a system from the output at current timestep known as feedback. The main components of such a system are an input, a controlled process, an output, a sensor and feedback. The figure demonstrates how a simple feedback control loop looks like. For example, consider  system that controls room temperature, here the input would be the temperature of the room, the process could be a HVAC unit that increases/decreases the temperature, output is the new modified temperature, sensor sense the temperature inside the room at certain intervals and the feedback mechanism could be the change in output temperature as compared to a desired temperature.
 
-In control theory, there are two main types of control system in existence. Openloop an closed-loop. An openloop system is involves only one way flow of control, that means the control input is pre-decided based on prior knowledge of system and there is no change in future inputs based on how the system responded to previous inputs. eg. a washing machine takes the time for wash as input control and washes the clothes for that particular time even if the clothes are not washed properly, the washing machine will still stop at the end of cycle. A closed loop on the other hand, measures the output and uses its as feedback to improve the control task. Open loop control can control a system accurately only if the entire model specification of system is known before hand, which is not the case for complex dynamic systems. Hence, the closed-loop strategies which adaptively modify the control behavior are the main go-to strategies for such complex dynamic systems.
+4) Feedback Control                     (3p)
+    4.1) Introduction                   (1.5p)
+        - open-loop vs closed-loop
+        - optimal control problem
+    4.2) Methods for feedback control   (1.5p)
+        - conventional methods:		PID
+        	- algorithm
+        	- advantages
+        	- disadvantages
+        - MPC for optimal feedback control
+        	- algorithm
+        	- advantages
+        	- disadvantages
+        - RL for optimal feedback control
+        	- algorithm
+        	- advantages disadvantages
 
-Many different types of controllers exist following the strategies of feedback control. One of the basic one is a proportional integral derivative (PID) controller which continuously calculates an error value e(t) as the difference between a desired setpoint and a measured process variable and applies a correction based on proportional, integral, and derivative terms. Fig x shows PID controller in action. 
+
+https://www.researchgate.net/publication/276831282_How_to_model_and_prove_hybrid_systems_with_KeYmaera_a_tutorial_on_safety
+Feedback control is a technique which involves influencing the future behavior of a system using its output at heac timestep known as feedback. The main components of such a system are an input, a controlled process, an output, a sensor and feedback. The figure demonstrates how a simple feedback control loop looks like. For example, consider a control system that adjusts room temperature based on comfort leve, this system will take as input, the current temperature of room, here the input would be the temperature of the room, the process could be a HVAC unit that increases/decreases the temperature, output is the new modified temperature, sensor sense the temperature inside the room at certain intervals and the feedback mechanism could be the change in output temperature as compared to a desired temperature.
+
+In control theory, there are two main types of control system in existence. Openloop and closed-loop. An openloop system involves only one way flow of control, that means the control input is pre-decided based on prior knowledge of system and there is no change in future inputs based on how the system responded to previous inputs. eg. a washing machine takes the time for wash as input control and washes the clothes for that particular time even if the clothes are not washed properly, the washing machine will still stop at the end of cycle. A closed loop on the other hand, measures the output and uses its as feedback to improve the control task. Open loop control can control a system accurately only if the entire model specification of system is known before hand, which is not the case for complex dynamic systems. Hence, the closed-loop strategies which adaptively modify the control behavior are the main go-to strategies for such complex dynamic systems.
+
+
+Many different types of controllers exist following the strategies of feedback control. One of the basic type is a proportional integral derivative (PID) controller which continuously calculates an error value e(t) as the difference between a desired setpoint and a measured process variable and applies a correction based on proportional, integral, and derivative terms. Fig x shows PID controller in action. 
 fig 
 The P in PID controller represents proportional error, et = dv-pv. Here, as the process variable deviates from desired value, the error increases proportionally, hence the name. If the change is high, the error is going to be higher because of the constant Kp. The second term, integral, takes into account the past error measurements and integrates them over time. For example if there is an error after implementation of proportional control, the integral term can be used to diminish or eliminate this error based on the cumulative values of past error measurements. The final term, derivative, involves learning the future trend of error values based on how rapidly the error values are changing over a fixed time period. Mathematically speaking, the following equation summarizes a PID controller, where the non-negative, Kp,ki,kd, denote the coefficients for the proportional, integral, and derivative terms respectively. The main advantage of PID controller is that its simple as it only depends on the measurements of process variables and doesn't require any prior knowledge of the model or process. However, it doesn't always gaurantee optimality. Because of its simplicity and no optimal gaurantees, its not suitable for complex dynamic systems atleast out-of-the box. 
 
@@ -20,34 +40,8 @@ One main fallback of MPC is because of being model-based, it is practically not 
 Reinforcement learning is a class of technique related to machine learning that involves learning from interaction with an environment. The environment could be any physical description of real world eg. a 3d road for self driving cars, room for cleaning robot, or just airfield for a self-driving drone, etc. The learner or agent in RL interacts with environment by performing actions carefully chosen using a learning policy. In return the environment responds with a measure of how good the actions are which is called reward. The general goal of the RL agent is to maximise this reward. Reinforcement learning has caught attention of researchers recently because of its promising results in the field of control. talk about success and disadvantages of RL.
 
 
+References
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+PID (ref: http://d-scholarship.pitt.edu/8171/1/AngLi20100628.pdf)
+PID vs MPC https://www.ijareeie.com/upload/2013/november/17_COMPARATIVE.pdf
+MPC (ref: https://eng.libretexts.org/Bookshelves/Industrial_and_Systems_Engineering/Book%3A_Chemical_Process_Dynamics_and_Controls_(Woolf)/12%3A_Multiple_Input_Multiple_Output_(MIMO)_Control/12.03%3A_MIMO_using_model_predictive_control#:~:text=handle%20structural%20changes.-,Disadvantages%20of%20MPC,not%20handle%20input%20disturbances%20well.)

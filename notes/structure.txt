@@ -2,15 +2,27 @@ Improvements:
     
     * Start each section, of atleast 2 pages, with an introduction paragraph that summarizes what was discussed previously and what is happening next
 
-    * Algorithm for introduction:
-        - write each subsection yourself as much as you can about the topic.
-        - calculate error:
-                J := min [actual page count - expected page count]
-        - optimal solution
-
 
 
 Thesis Structure (40p):
+                        (41p)    [17.5p]     33 days (5weeks)
+---------------------------------------------
+- Abstract              (1p)     [-]
+- Introduction          (2p)     [-]
+- Related Work          (2p)     [-]
+--------------------------------------------- 10 days (1.5 weeks)
+- PDE                   (5p)     [6p]
+- Feedback Control      (3p)     [2.5p]
+- MPC                   (5p)     [3p]
+- RL                    (8p)     [3.5p]
+- RL vs MPC             (2p)     [1.5p]
+--------------------------------------------- 17 days (2.5 weeks)
+- Physics-Gym interface (2.5p)   [1p]
+- Experiments           (8p)     [-]
+- Evaluation            (2p)     [-]
+--------------------------------------------- 
+- Conclusion            (1p)     [-]
+References
 
 Abstract         (1p)
 
