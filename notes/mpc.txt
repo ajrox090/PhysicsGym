@@ -86,11 +86,14 @@ Convection-diffusion equation [3p]
 		- time discretization using implicit euler
 		- finite dimensional optimal control problem
 
-Convection diffusion equation models the change in physical elements like velocity, temperature in a physical dynamic system in the presence of convective and diffusive processes. Specifically in the problem disscussed here, this equation models the dispersion of temperature inside a room by conductive heat transfer (eg. radiation) and convective transfer induced by velocity field (eg. air flow) [] and is given by,
-\equation
-\equation
-\equation
-where the domain (e.g. room) xxxx, T>0 are the number of time steps. uuu is the temperature at each point in xxx, D is the diffusion coefficient, v: xxxxxx is the velocity field and u0: xxxxxx is the initial temperature distribution. Here, the diffusion term is xxxxx and the convection term is xxxx. Note that the names of some quantities have been changed from what is originally mentioned in [] to keep the notation consistent with rest of the thesis.
+Convection diffusion equation models the change in physical elements like velocity, temperature in a physical dynamic system in the presence of convective and diffusive processes. Specifically in the problem disscussed here, this equation models the dispersion of temperature inside a room by conductive heat transfer (eg. radiation) and convective transfer induced by velocity field (eg. air flow). Let $\Omega \subset \mathbf{R}^d$, $d \in \{1,2\}$ be a domain, T > 0 and define $Q := (0,T) X \Omega$. The convection diffusion equation is [],
+\begin{equation*}
+	\begin{split}
+		y_t(t,x) - \alpha \Delta y(t,x) + v(t,x) \nabla y(t,x) &= 0   \quad \text{almost everywhere (a.e.) on Q}\\
+		y(0,x) = y_0(x) \quad \quad \quad  \text{a.e. in} \Omega\\
+	\end{split}
+\end{equation*}  
+where, $y: Q -> \mathbf{R}$ is the temperature distribution, $\alpha \in \mathbf{R}$ is the diffusion coefficient, $v: [0, T] -> \Omega$ is a velocity field, $y_0: \Omega -> \mathbf{R}$ is the initial temeprature distribution. The equation states that the change in temperature $y_t$ depends on the diffusion term $\alpha \Delta y(t,x)$ and the convective term $v(t,x) \nabla y(t,x)$ in the presence of a velocity field $v(t,x)$
 
 As mentioned in section PDE, in order to solve any pde, the boundary conditions must be specified. In this scenario, the temperature inside the room is influenced by the outside temperature and so the boundary conditions are given by,
 \equation

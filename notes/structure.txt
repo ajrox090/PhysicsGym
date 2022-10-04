@@ -3,9 +3,13 @@ Improvements:
     * Start each section, of atleast 2 pages, with an introduction paragraph that summarizes what was discussed previously and what is happening next
 
 
+todo Monday 3rd october: 6hrs
+    - complete MDP as PDE section of RL with all equations (approx 1hr)
+    - refine each foundational chapter (approx 4 hours) keeping right references in place
+    - finalize thesis draft with references and final touches for figures. (1hr)
 
 Thesis Structure (40p):
-                        (41p)    [18 1/3 p]     33 days (5weeks)
+                        (41p)    [19 1/3 p]     33 days (5weeks)
 ---------------------------------------------
 - Abstract              (1p)     [-]
 - Introduction          (2p)     [-]
@@ -13,8 +17,8 @@ Thesis Structure (40p):
 --------------------------------------------- 10 days (1.5 weeks)
 - PDE                   (6p)     [6p]
 - Feedback Control      (2p)     [2 1/3p]
-- MPC                   (5p)     [3.5p]
-- RL                    (8p)     [3.5p]
+- MPC                   (5p)     [4p]
+- RL                    (8p)     [4p]
 - RL vs MPC             (2p)     [2p]
 --------------------------------------------- 17 days (2.5 weeks)
 - Physics-Gym interface (2.5p)   [1p]
@@ -33,7 +37,7 @@ Abstract         (1p)
     1.2) mpc    (1/2)
         1.2.1) what is mpc and its success stories
         1.2.2) why does mpc work and its limitations
-    1.3) rl     (1/2)
+    1.3) rl (general introduction)     (1/2)
         1.3.1) what is RL and its success stories
         1.3.2) why does RL work and its limitations
     1.4) thesis (1/2)
@@ -64,7 +68,7 @@ Abstract         (1p)
     4.2) Methods for feedback control   (1.5p)
         - conventional methods:     PID
         - Iterative methods:        MPC
-        - Machine Learning methods: RL
+        - Machine Learning methods: RL (specifically for feedback control)
 
 5) MPC                                      (5p)
     5.1) Introduction to control using MPC [1]  (1p)         [Thursday]
@@ -79,7 +83,7 @@ Abstract         (1p)
     5.4) Example convection-diffusion eqn   (2)                 [Friday]
         - [main: 2.4]
 
-6) RL                       (7p)
+6) RL  (detailed explanation, MDP as PDE, with examples)                     (7p)
     6.1) Introduction       (1p)
     6.2) MDP                (1.5p)
         - components: Environment, action space, reward, policy, value function and discount factor
