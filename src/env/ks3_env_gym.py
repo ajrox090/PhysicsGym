@@ -11,7 +11,7 @@ from typing import Optional, Tuple, Union, Dict
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 from tqdm import tqdm
 
-from src.env.EnvWrapper import EnvWrapper
+from src.env.PhysicsGym import PhysicsGym
 from src.env.physics.ks3 import KuramotoSivashinsky
 from src.util.ks_util import ks_initial, ks_initial2
 # from tests.simple_ks_simulation import simpleSine, simpleCosine
@@ -19,7 +19,7 @@ from src.util.ks_util import ks_initial, ks_initial2
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
 
-class KS3EnvGym(EnvWrapper):
+class KS3EnvGym(PhysicsGym):
     def __init__(self, N,
                  step_count: int = 32,
                  domain_dict=None,

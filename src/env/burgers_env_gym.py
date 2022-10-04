@@ -12,13 +12,13 @@ from typing import Optional, Tuple, Union, Dict
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 from tqdm import tqdm
 
-from src.env.EnvWrapper import EnvWrapper
+from src.env.PhysicsGym import PhysicsGym
 from src.env.physics.burgers import Burgers
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
 
-class Burgers1DEnvGym(EnvWrapper):
+class Burgers1DEnvGym(PhysicsGym):
     def __init__(self, N,
                  step_count: int = 32,
                  domain_dict=None,
@@ -31,12 +31,12 @@ class Burgers1DEnvGym(EnvWrapper):
                  ):
         super(Burgers1DEnvGym, self).__init__()
 
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, dtype=np.float32,
-                                                shape=self._get_obs_shape(tuple([domain_dict['x']])))  # , domain_dict[
-        # 'y']])))
-        self.action_space = gym.spaces.Box(low=0, high=255, dtype=np.float32,
-                                           shape=self._get_act_shape(
-                                               tuple([domain_dict['x']])))  # , domain_dict['y']])))
+        self.observation_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, dtype=np.float32,
+            shape=tuple([domain_dict['x']]) + (1,))
+        self.action_space = gym.spaces.Box(
+            low=0, high=255, dtype=np.float32,
+            shape=(1,))
 
         self.N = N
         self.dt = dt
@@ -92,7 +92,8 @@ class Burgers1DEnvGym(EnvWrapper):
         if self.test_mode:
             self.gt_state = self._step_gt()
 
-        obs = self._build_obs()
+        # obs = self._build_obs()
+        obs = self.cont_state.data._native
         rew = self._build_reward(forces)
         done = np.full((1,), self.step_idx == self.step_count)
         if self.step_idx == self.step_count:
@@ -179,7 +180,7 @@ class Burgers1DEnvGym(EnvWrapper):
         return tuple(field_shape) + (2 * len(field_shape) + 1,)
 
 
-class Burgers2DEnvGym(EnvWrapper):
+class Burgers2DEnvGym(PhysicsGym):
     def __init__(self, N,
                  step_count: int = 32,
                  domain_dict=None,

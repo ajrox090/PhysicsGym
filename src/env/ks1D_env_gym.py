@@ -7,14 +7,14 @@ from phi.physics._effect import FieldEffect
 from typing import Optional, Tuple, Union, Dict
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
-from src.env.EnvWrapper import EnvWrapper
+from src.env.PhysicsGym import PhysicsGym
 from src.env.physics.ks import KuramotoSivashinsky
 from tests.simple_ks_simulation import simpleSine, simpleCosine
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
 
-class KS1DEnvGym(EnvWrapper):
+class KS1DEnvGym(PhysicsGym):
     def __init__(self, N,
                  step_count: int = 32,
                  domain_dict=None,

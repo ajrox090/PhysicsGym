@@ -7,13 +7,13 @@ from phi.physics._effect import FieldEffect
 from typing import Optional, Tuple, Union, Dict
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
-from src.env.EnvWrapper import EnvWrapper
+from src.env.PhysicsGym import PhysicsGym
 from src.env.physics.heat import Heat
 
 GymEnvObs = Union[np.ndarray, Dict[str, np.ndarray], Tuple[np.ndarray, ...]]
 
 
-class Heat1DEnvGym(EnvWrapper):
+class Heat1DEnvGym(PhysicsGym):
     def __init__(self,
                  N,
                  step_count: int = 32,
