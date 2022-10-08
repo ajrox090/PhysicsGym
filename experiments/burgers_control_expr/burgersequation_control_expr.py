@@ -1,21 +1,11 @@
-import copy
-from typing import Optional
-import gym
-import matplotlib.pyplot as plt
-from phi.flow import *
-from stable_baselines3 import PPO, DDPG
-from stable_baselines3.common.running_mean_std import RunningMeanStd
-from stable_baselines3.ppo import MlpPolicy
 from tqdm import tqdm
+from phi.flow import *
+import matplotlib.pyplot as plt
 
-from src.env.PhysicsGym import HeatPhysicsGym, TestPhysicsGymBurgers
-# from stable_baselines3.ddpg import MlpPolicy
+from stable_baselines3 import PPO, DDPG
+from stable_baselines3.ppo import MlpPolicy
 
-from src.env.burgers_env_gym import Burgers1DEnvGym
-from src.env.heat_env_gym import Heat1DEnvGym
-from src.env.physics.heat import Heat
-from src.networks import RES_UNET, CNN_FUNNEL
-from src.policy import CustomActorCriticPolicy
+from src.env.BurgersPhysicsGym import BurgersPhysicsGym
 
 # env
 N = 8
@@ -39,14 +29,13 @@ agent_krargs_ppo = dict(verbose=0, policy=MlpPolicy,
                         learning_rate=lr,
                         batch_size=batch_size)
 
-env = TestPhysicsGymBurgers(**env_krargs)
+env = BurgersPhysicsGym(**env_krargs)
 
 agent = PPO(env=env, **agent_krargs_ppo)
 
 obs = env.reset()
 u = env.init_state
 plt.plot(u.data.native("vector,x")[0], label='initial state')
-# vis.show(u, title="init_state")
 # for _ in view('state, obs', framerate=1, namespace=globals()).range():
 for i in tqdm(range(100)):
     u = env.physics.step(u, dt=dt)
@@ -59,7 +48,6 @@ plt.xlim(0, 8)
 plt.ylim(-3, 3)
 plt.legend()
 plt.show()
-# vis.show(u, title="final_state")
 
 print("training begins")
 agent.learn(total_timesteps=100)

@@ -5,7 +5,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 from stable_baselines3.ppo import MlpPolicy
 
-from src.env.burgers_env_gym import Burgers2DEnvGym
+from src.env.BurgersPhysicsGym import Burgers2DEnvGym
 from src.runner import RLRunner
 
 runner = RLRunner(path_config="experiment.yml")

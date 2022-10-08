@@ -10,8 +10,8 @@ from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-from src.env.burgers_env_gym import Burgers1DEnvGym
-from src.env.heat_env_gym import Heat1DEnvGym
+from src.env.BurgersPhysicsGym import Burgers1DEnvGym
+from src.env.HeatPhysicsGym import Heat1DEnvGym
 
 from src.policy import CustomActorCriticPolicy
 from src.networks import RES_UNET, CNN_FUNNEL
