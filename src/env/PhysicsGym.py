@@ -13,7 +13,7 @@ class PhysicsGym(gym.Env):
     def __init__(self,
                  domain, dx,
                  dt, step_count, domain_dict,
-                 final_reward_factor, reward_rms: [Optional] = RunningMeanStd()):
+                 reward_rms: [Optional] = RunningMeanStd()):
         super(PhysicsGym, self).__init__()
 
         # initialization and step variables
@@ -42,7 +42,6 @@ class PhysicsGym(gym.Env):
         self.step_idx = 0
         self.actions = None
         self.reward_rms = reward_rms
-        self.final_reward_factor = final_reward_factor
         self.reward_range = (-float('inf'), float('inf'))
 
     def reset(self):
