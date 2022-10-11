@@ -3,3 +3,4 @@
 .idea/*
 notes/figures/.DS_Store
 notes/.DS_Store
+/experiments/heatequation1D_control_expr/log/
