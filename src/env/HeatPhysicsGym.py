@@ -22,7 +22,6 @@ class HeatPhysicsGym(PhysicsGym):
         super(HeatPhysicsGym, self).__init__(domain, dx, dt, step_count,
                                              domain_dict, reward_rms=RunningMeanStd())
 
-        self.final_state = None
         self.actions_grid_trans = None
         self.diffusivity = diffusivity
         self.physics = Heat(diffusivity=diffusivity)
@@ -34,8 +33,8 @@ class HeatPhysicsGym(PhysicsGym):
         if self.reward is not None:
             self.previous_rew = copy.deepcopy(self.reward)
             self.reward = []
-        if self.init_state is None:
-            self.init_state = CenteredGrid(self.simpleGauss, **self.domain_dict)
+
+        self.init_state = CenteredGrid(self.simpleGauss, **self.domain_dict)
 
         self.cont_state = copy.deepcopy(self.init_state)
         self.reference_state_np = np.zeros(self.N).reshape(self.N, 1)
@@ -66,8 +65,6 @@ class HeatPhysicsGym(PhysicsGym):
         self.reward_rms.update(rew)
         rew = (rew - self.reward_rms.mean) / np.sqrt(self.reward_rms.var)
         done = np.full((1,), self.step_idx == self.step_count)
-        if self.step_idx == self.step_count:
-            self.final_state = copy.deepcopy(self.cont_state)
         info = {'rew_normalized': rew}
         rew = np.sum(rew, axis=0)
         self.reward.append(rew)

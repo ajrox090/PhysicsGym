@@ -125,7 +125,7 @@ def J(u_: list, y_0_native: np.array, y_gt_native: np.ndarray):
 
 # ** MPC loop
 
-# intial guess for first optimization problem
+# initial guess for first optimization problem
 u0 = [CenteredGrid(GaussianForce, **domain_dict).data.native("vector,x")[0] for _ in range(p)]
 # box constraints u_min <= u <= u_max
 bounds = Bounds(u_min * np.ones(p * N, dtype=float), u_max * np.ones(p * N, dtype=float))
