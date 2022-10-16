@@ -18,9 +18,10 @@ class HeatPhysicsGym(PhysicsGym):
                  step_count: int = 1000,
                  domain_dict=None,
                  dt: float = 0.01,
-                 diffusivity: int = 0.3):
+                 diffusivity: int = 0.3,
+                 dxdt: int = 100):
         super(HeatPhysicsGym, self).__init__(domain, dx, dt, step_count,
-                                             domain_dict, reward_rms=RunningMeanStd())
+                                             domain_dict, reward_rms=RunningMeanStd(), dxdt=dxdt)
 
         self.actions_grid_trans = None
         self.diffusivity = diffusivity
@@ -28,13 +29,16 @@ class HeatPhysicsGym(PhysicsGym):
         self.reward = []
         self.previous_rew = []
 
+        self.reset()
+
     def reset(self):
         self.step_idx = 0
         if self.reward is not None:
             self.previous_rew = copy.deepcopy(self.reward)
             self.reward = []
 
-        self.init_state = CenteredGrid(self.simpleGauss, **self.domain_dict)
+        # self.init_state = CenteredGrid(self.simpleUniformRandom, **self.domain_dict)
+        self.init_state = CenteredGrid(self.justOnes, **self.domain_dict)
 
         self.cont_state = copy.deepcopy(self.init_state)
         self.reference_state_np = np.zeros(self.N).reshape(self.N, 1)
@@ -52,7 +56,7 @@ class HeatPhysicsGym(PhysicsGym):
         forces_effect = FieldEffect(self.actions_grid_trans, ['temperature_effect'])
 
         # step environment
-        self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
+        self.cont_state = self.step_physics(self.cont_state, (forces_effect,))
 
         # visualize
         # if self.step_idx % (self.step_count - 1) == 0:
@@ -70,16 +74,13 @@ class HeatPhysicsGym(PhysicsGym):
         self.reward.append(rew)
         return obs, rew, done, info
 
-    def render(self, mode: str = 'final', title: str = 'HeatPhysicsGym') -> None:
+    def render(self, mode: str = 'live', title: str = 'HeatPhysicsGym') -> None:
         x = np.arange(0, self.domain, self.dx)
         plt.tick_params(axis='x', which='minor', length=10)
         plt.grid(True, linestyle='--', which='both')
         plt.plot(x, self.init_state.data.native("vector,x")[0], label='init state')
         plt.plot(x, self.actions_grid_trans.data.native("vector,x")[0], label='action')
-        if mode == 'final':
-            plt.plot(x, self.final_state.data.native("vector,x")[0], label='final state')
-        elif mode == 'cont':
-            plt.plot(x, self.cont_state.data.native("vector,x")[0], label='cont state')
+        plt.plot(x, self.cont_state.data.native("vector,x")[0], label='cont state')
         plt.plot(x, self.reference_state_np, label='target state')
         plt.xlim(0, self.domain)
         plt.ylim(-3, 3)

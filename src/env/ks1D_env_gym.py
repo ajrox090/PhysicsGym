@@ -53,7 +53,7 @@ class KS1DEnvGym(PhysicsGym):
         # prepare goal state
         state = copy.deepcopy(self.init_state)
         for _ in range(self.step_count):
-            state = self._step_sim(state, (self.gt_forces,))
+            state = self.step_physics(state, (self.gt_forces,))
         self.goal_state = state
         # init reference states
         if self.test_mode:
@@ -66,7 +66,7 @@ class KS1DEnvGym(PhysicsGym):
         self.step_idx += 1
         forces = self.actions
         forces_effect = FieldEffect(CenteredGrid(actions_tensor, **self.domain_dict), ['velocity_effect'])
-        self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
+        self.cont_state = self.step_physics(self.cont_state, (forces_effect,))
 
         if self.rendering:
             self.render()

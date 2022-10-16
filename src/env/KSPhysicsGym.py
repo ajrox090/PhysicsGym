@@ -35,7 +35,7 @@ class KuramotoSivashinskyPhysicsGym(PhysicsGym):
             self.previous_rew = copy.deepcopy(self.reward)
             self.reward = []
         if self.init_state is None:
-            self.init_state = CenteredGrid(self.simpleGauss, **self.domain_dict)
+            self.init_state = CenteredGrid(self.simpleUniformRandom, **self.domain_dict)
 
         self.cont_state = copy.deepcopy(self.init_state)
 
@@ -53,7 +53,7 @@ class KuramotoSivashinskyPhysicsGym(PhysicsGym):
         forces_effect = FieldEffect(self.actions_grid_trans, ['temperature_effect'])
 
         # step environment
-        self.cont_state = self._step_sim(self.cont_state, (forces_effect,))
+        self.cont_state = self.step_physics(self.cont_state, (forces_effect,))
 
         # visualize
         # if self.step_idx % int((self.step_count - 1)/5) == 0:

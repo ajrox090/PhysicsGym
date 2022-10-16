@@ -275,7 +275,7 @@ class BurgersTrainingExpr(Experiment):
         while not done:
             act = self.predict(obs)
             obs, _, dones, infos = env.step(act)
-            pass_state = env._step_sim(pass_state, ())
+            pass_state = env.step_physics(pass_state, ())
             pass_frames.append(pass_state.velocity.data)
             done = dones[0]
             if not done:

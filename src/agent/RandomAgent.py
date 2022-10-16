@@ -8,9 +8,8 @@ from stable_baselines3.common.type_aliases import MaybeCallback, GymEnv, Schedul
 
 class RandomAgent(BaseAlgorithm):
 
-    def __init__(self, env: Union[GymEnv, str, None], learning_rate: Union[float, Schedule],
-                 tensorboard_log: Optional[str] = None, ):
-        super().__init__(policy=MlpPolicy, env=env, learning_rate=learning_rate, tensorboard_log=tensorboard_log)
+    def __init__(self, env: Union[GymEnv, str, None]):
+        super().__init__(policy=MlpPolicy, env=env, learning_rate=1.0)
 
     def _setup_model(self) -> None:
         pass
