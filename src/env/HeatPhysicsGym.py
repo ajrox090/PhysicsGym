@@ -2,6 +2,7 @@ import copy
 import phi.math
 import numpy as np
 from matplotlib import pyplot as plt
+from phi import vis
 
 from phi.field import CenteredGrid
 from phi.physics._effect import FieldEffect
@@ -9,6 +10,9 @@ from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from src.env.PhysicsGym import PhysicsGym
 from src.env.physics.heat import Heat
+
+
+# np.random.seed(0)
 
 
 class HeatPhysicsGym(PhysicsGym):
@@ -23,12 +27,13 @@ class HeatPhysicsGym(PhysicsGym):
         super(HeatPhysicsGym, self).__init__(domain, dx, dt, step_count,
                                              domain_dict, reward_rms=RunningMeanStd(), dxdt=dxdt)
 
+        self.forces = None
         self.actions_grid_trans = None
         self.diffusivity = diffusivity
         self.physics = Heat(diffusivity=diffusivity)
         self.reward = []
         self.previous_rew = []
-
+        self.total_steps = 2
         self.reset()
 
     def reset(self):
@@ -37,8 +42,8 @@ class HeatPhysicsGym(PhysicsGym):
             self.previous_rew = copy.deepcopy(self.reward)
             self.reward = []
 
-        # self.init_state = CenteredGrid(self.simpleUniformRandom, **self.domain_dict)
-        self.init_state = CenteredGrid(self.justOnes, **self.domain_dict)
+        self.init_state = CenteredGrid(self.simpleUniformRandom, **self.domain_dict)
+        # self.init_state = CenteredGrid(self.justOnes, **self.domain_dict)
 
         self.cont_state = copy.deepcopy(self.init_state)
         self.reference_state_np = np.zeros(self.N).reshape(self.N, 1)
@@ -53,14 +58,15 @@ class HeatPhysicsGym(PhysicsGym):
         self.actions = actions.reshape(self.cont_state.data.native("x,vector").shape[0])
         actions_tensor = phi.math.tensor(self.actions, self.cont_state.shape)
         self.actions_grid_trans = CenteredGrid(actions_tensor, **self.domain_dict)
-        forces_effect = FieldEffect(self.actions_grid_trans, ['temperature_effect'])
+        self.forces = FieldEffect(self.actions_grid_trans, ['temperature_effect'])
 
         # step environment
-        self.cont_state = self.step_physics(self.cont_state, (forces_effect,))
+        self.cont_state = self.step_physics(self.cont_state, (self.forces,))
 
         # visualize
-        # if self.step_idx % (self.step_count - 1) == 0:
-        #     self.render()
+        # if self.step_idx == self.step_count - 1:
+        if self.step_idx % (self.total_steps - 1) == 0:
+            self.render()
 
         # post-processing
         self.step_idx += 1
@@ -79,13 +85,15 @@ class HeatPhysicsGym(PhysicsGym):
         plt.tick_params(axis='x', which='minor', length=10)
         plt.grid(True, linestyle='--', which='both')
         plt.plot(x, self.init_state.data.native("vector,x")[0], label='init state')
+        # plt.plot((self.forces.field.at(self.cont_state)).data.native("vector,x")[0], label='action')
         plt.plot(x, self.actions_grid_trans.data.native("vector,x")[0], label='action')
         plt.plot(x, self.cont_state.data.native("vector,x")[0], label='cont state')
-        plt.plot(x, self.reference_state_np, label='target state')
+        # plt.plot(x, self.reference_state_np, label='target state')
         plt.xlim(0, self.domain)
         plt.ylim(-3, 3)
         plt.legend()
-        plt.title(title)
+        plt.title(title + f' {self.step_idx} step')
+
         plt.show()
 
     def _build_obs(self) -> np.ndarray:

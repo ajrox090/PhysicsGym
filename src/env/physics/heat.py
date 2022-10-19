@@ -4,6 +4,7 @@ from phi.physics import diffuse
 from phi.physics._effect import effect_applied
 from phi.physics._physics import Physics, StateDependency
 
+
 class Heat(Physics):
 
     def __init__(self, diffusivity=0.1):
@@ -18,8 +19,5 @@ class Heat(Physics):
         t = diffuse.explicit(field=t, diffusivity=dt * diffusivity,
                              dt=dt)
         for effect in effects:
-            if isinstance(effect, CenteredGrid):
-                t = t + effect
-            else:
-                t = effect_applied(effect, t, dt)
+            t = effect_applied(effect, t, dt)
         return t

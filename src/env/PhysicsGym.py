@@ -33,7 +33,7 @@ class PhysicsGym(gym.Env):
         self.dxdt = dxdt  # number of time steps to simulate the environment
         self.observation_space = gym.spaces.Box(low=-inf, high=inf, dtype=np.float32,
                                                 shape=self._get_obs_shape())
-        self.action_space = gym.spaces.Box(low=-2.5, high=2.5, dtype=np.float32,
+        self.action_space = gym.spaces.Box(low=-1, high=1, dtype=np.float32,
                                            shape=self._get_act_shape())
 
         # variables specific to problem

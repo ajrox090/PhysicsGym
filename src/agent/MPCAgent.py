@@ -6,10 +6,12 @@ import phi
 from phi import math
 from phi.field import CenteredGrid, Grid, Field
 from phi.physics._effect import FieldEffect
+from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from stable_baselines3.ppo import MlpPolicy
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.type_aliases import MaybeCallback, GymEnv, Schedule
+from tqdm import tqdm
 
 from src.env.PhysicsGym import PhysicsGym
 
@@ -27,6 +29,7 @@ class MPCAgent(BaseAlgorithm):
         self.ph = ph
         # self.init_control = np.random.uniform(u_min, u_max, self.ph)
         self.init_control = np.zeros(self.ph)
+        # self.init_control = np.ones(self.ph)
         # self.Q = [(1.0 if i < self.env.N // 2 else 0.1) for i in range(self.env.N)]
 
         self.bounds = tuple(zip([u_min for _ in range(self.ph)], [u_max for _ in range(self.ph)]))
@@ -68,7 +71,7 @@ class MPCAgent(BaseAlgorithm):
         state = CenteredGrid(phi.math.tensor(curr_state, self.shape_phi_state), **self.env.domain_dict)
         states = []
 
-        for i in range(self.ph):
+        for i in tqdm(range(self.ph)):
             action = FieldEffect(CenteredGrid(
                 phi.math.tensor(self.env.action_transform(actions[i]).reshape(self.shape_nt_state),
                                 self.shape_phi_state),
@@ -82,8 +85,8 @@ class MPCAgent(BaseAlgorithm):
         for ii in range(dy.shape[1]):
             dyQ += np.power(dy[:, ii], 2)
 
-        return self.env.dt * np.sum(dyQ)
-        # return np.sum(dyQ)
+        # return self.env.dt * np.sum(dyQ)
+        return np.sum(dyQ) / self.env.N
 
     def _setup_model(self) -> None:
         pass
