@@ -1,0 +1,49 @@
+1) Introduction     (2p)   (formal in a philosophical way)
+    1.1) pde control    (1/2)
+    1.2) mpc    (1/2)
+        1.2.1) what is mpc and its success stories
+        1.2.2) why does mpc work and its limitations
+    1.3) rl (general introduction)     (1/2)
+        1.3.1) what is RL and its success stories
+        1.3.2) why does RL work and its limitations
+        1.3.3) RL applications to pde control: chaotic systems[Kuramoto Sivashinsky], active flow control: drag reduction [Cylinder2DFlowDRL], Controlling room temeprature: HVAC [HeatInvader]
+    1.4) thesis (1/2)
+        1.4.1) describe the current usage of rl in the `pde control` field and motivate the need for an interface.
+        1.4.2) my main contributions with this thesis:
+            1) interface (physics and environment interface)
+                - how did I design the interface, what considerations did we take into account?
+            2) what can the interface be used for ?
+                - and what not?
+        1.4.3) how is the rest of the thesis arranged?
+
+PDE control is a field of control theory that focuses on controlling dynamic systems governed by a set of partial differential equations. Generally in a linear or non-linear control problem, the plant is described by an ordinary differential equation whose state depends on a single independent variable e.g. time. On the other hand, in a PDE control problem, the plant is a partial differential equation where the state is a combination of more than one independent variable, e.g. space and time. PDE control holds application in various disciplines of engineering including space engineering, traffic flow control, control of temeprature, fluid mechanics, vibration control, etc. In space engineering, the one application of PDE control is to design robots with flexible components modelled by beam equations given by Euler-bernouli beam theory[], which provides a means of calculating the load-carrying and deflection characteristics of beams. In field of traffic flow control, the dynamics of multiple vehicles on the road can be accurately modelled by using partial differential equations, assisting in reducing traffic jams[] e.g. using speed limit as control actuators. PDE control is also used for controlling temperature of the room where the dynamic system is described by heat equation and the control actuator could be a HVAC unit[RL_HI]. In the field of fluid mechanics, PDE control has many applications for active flow control which requires the actuators to interact with the flow., involving reducing the drag and the lift generated in a turbulent flow[] and shape optimization [].
+
+In control theory, there are two main types of control system in existence. Openloop and closed-loop (feedback control system). An openloop system involves only one way flow of control, that means the control input is pre-decided based on prior knowledge of system and there is no change in future inputs based on how the system responded to previous inputs. eg. a washing machine takes the time for wash as input control and washes the clothes for that particular time even if the clothes are not washed properly, the washing machine will still stop at the end of cycle. A feedback control system on the other hand, measures the output and uses it as feedback to improve the control task. Open loop control can control a system accurately only if the entire model specification of system is known before hand, which is not the case for complex dynamic systems. Hence, the feedback control strategies which adaptively modify the control behavior are the main go-to strategies for such complex dynamic systems found in PDE control problems.
+
+Model predictive control is a powerful optimization strategy for feedback control and has been around since 1980s. It involves using a system model to predict optimal control variables of a dynamic system. One factor for its popularity is its ability to handle multiple-input multiple-output (MIMO) systems, which the simple controllers like PID fail to optimally control, especially when there are multiple dependent input/output variables. Another factor is its ability to incorporate constraints which can involve limiting the domain of control parameters that resembles a real world scenario. For example, consider a control problem of keeping an autonomous car in the desired lane. The plant is the environment in which car is driven e.g. the road with cars in different lanes and the control parameter is the speed of car being controlled. So, a boundary condition could be, the speed of car cannot exceed the speed limit which can be incorporated in MPC by bounding the domain of speed of the car with the speed limit. Despite these benefits, MPC does require a powerful and fast processor since it solves the optimization problem in an online manner at each timestep.
+
+Another feedback control framework emerging from the fields of machine learning and dynamic programming is Reinforcement learning, which gained widespread popularity by learning to find control strategies to defeat professional players in many popular games. Reinforcement learning involves a controller (agent) which adaptively learns the best control strategy to control an environment. An evironment is a partial description of real world and for PDE control problem, it can be represented by a single or a combination of partial differential equations. The agent interacts with this environment by performing actions and in return the environment gives some feedback in the form of reward. The goal of an RL agent is to find the control strategy that maximizes this reward. Reinforcement learning has many applications in autonomous field regarding learning to control self-driving cars or autnomous drones or autnomous machines for harvesting crops. There is also theoretical evidence of its success stories in the field of fluid mechanics for controlling turbulent flows using techniques like drag and lift reduction[], controlling the temperature of a room based on comfort level while reducing energy cost[] or stabalization of partial differential equations [Sburger,KS].
+
+This thesis focusses on developing a reinforcement learning interface for controlling partial differential equations. Our main contribution is ...
+In Chapter 2 we discuss related work in the field of reinforcement learning for PDE control and motivate the need for an interface. Chapters 3 to 7 serve as the foundational chapters covering necessary expalantions for understanding how to solve Partial differential equations within the principles of feedback control using model predictive control and reinforcement learning. In Chapters 8 and 9, we introduce our Physics-Gym interface showcasing the kind of experiments that can be performed using it and their results.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

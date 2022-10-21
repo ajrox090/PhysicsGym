@@ -1,0 +1,100 @@
+Physics-Gym interface [2p]
+    - Intro     [0.5p]
+        - physics gym
+            - incorporate PDE solvers within RL framework
+            (PDE - phiflow; RL - open AI gym)
+            - inspired from PDE control RL
+            - compatible with any PDE library
+        - aimed problem types
+            - stablization problems
+            - trajectory matching
+        - rest of chapter
+            - components of interface
+            - problems using phiflow
+            - problems using any other PDE library
+    - Components  [1p]
+        - Environment:  [0.5p]
+            - init, reset
+            - step
+            - conversion methods
+            - helper methods
+        - Agent:        [0.5p]
+            - RL, mpc, random
+    - How to use [0.5p]
+        - Phiflow problems:
+            - physics: diffuse, ...
+            - states -> field:CenteredGrid,numpy
+            - action space, observation space
+            - action transformation
+            - step environment
+            - build rewards
+        - Any PDE problems
+            - observation and action spaces
+            - states -> field:numpy
+        - runner interface: how to run experiments and evaluate results
+            - how to run rl and mpc experiment
+            - how to visualize output and evaluate results.
+
+Physics-gym interface is an interface connecting reinforcement learning to partial differential equation control. It establishes a connection between the reinforcement learning framework(OpenAI-Gym) and Phiflow: A differentiable PDE solving framework for machine learning. Here, the environment in RL is governed by physics objects defined in phiflow where stepping the environment forward in time resolves down to solving a PDE equation respective to the problem.
+The base design is inspired from the problem of "Controlling burgers equation" from the book "Physics based deep learning"\ref{} but it uses older version of phiflow[1.5.1] and is not compatible with the current version [2.2.3] during the time of writing this thesis. Physics gym works with any version of phiflow and is also compatible with any PDE solver library which can output state vectors as python:numpy objects. For how to add new PDE solver library, please refer to AppendixX.
+    
+    This interface aims at solving two main types of problems, i) stabilization problems where the goal is to bring the
+environment to a stable state by learning the right sequence of actions in the shortest period of time, ii) trajectory matching problems in which the environment must reach a reference state in the fastest way possible while minimizing the cost to reach to the reference state. In this chapter we will discuss the main components of our Physics gym interface that explains how the connection is established between reinforcement learning and partial differential equation control, then proceed with explanation of how to define above mentioned problems using our interface in phiflow or any other PDE library.
+
+PhysicsGym starts with initialization of the environment which involves instantiating three main variables, observation
+space, action space and physics object, and other problem specific variables like domain, resolution and time-step information. Both observation and action spaces are defined using Box object from Gym, which involves setting the low value and the high value of each space along with the shape of the space, which is specific to problem at hand. For example, if we want our control agent to predict a scalar action in the range [-1,1], then low=-1, high=1, shape=(1,). For the problems targeted in this thesis, the observation space is a continuous space in the range [-inf, inf].
+    
+    The reset method initializes the important variables which define the state of environment and also the problem, when 
+its called in the first time step. This method specifically sets the initial states and reference states but also the counter variables that record the time state of the environment. The type^1 of state can be anything that is compatible with the PDE solver but the observation returned by this method should always be an array of Numpy object to be compatible with reinforcement learning framework: OpenAI gym. The step method in OpenAI gym takes as input the actions predicted by the agent, updates the environment and gives feedback on the actions. Our interface enhances this method by incorporating additional processing steps that makes it possible to use any PDE solver. 
+
+    Our step method is basically made up of three steps i) pre-process actions, ii) apply actions iii) post-process results. 
+In order to understand each step, lets consider a simple problem of controlling the temperature in a 3 dimensional room
+where a control action is performed with a adjusting the speed of a fan somewhere inside the room. This results in the action being scalar and continuous. In order to apply this control action on the environment, it requires simulation of airflow from the fan scaled by the control action e.g. speed of the fan. This is handled in i), the pre-processing step which takes a scalar action and transforms it into a field that can be applied to the environment and influence it. This also works if the predicted actions are a highdimensional vector instead of scalar, the only requirement is that the shape of actions should be compatible with the environment so, it can be applied on the environment. This can be handled in the helper function: action_transform of our interface. The second step ii), is about updating the environment by applying the prepared actions. This involves calling PDE solver routines like diffusion and advecton if the PDE solver in use is Phiflow and then mathematically updating the resulting state by adding or substracting the actions based on the type of problem. The result of this step is an updated state that is still of type compatible with the PDE solver. In case of phiflow, this object is of type 'field' that is incompatible with RL framworks. So, the final step iii), does some necessary post processing to make things compatible with the RL framework. It does so by, first converting the updated state to numpy object, second calculating the reward and normalizing it and third by preparing some information of about current state of execution of experiment. The output of the entire step method is a four tuple consisting of (observation, reward, done, info) where 'observation' is the final updated state of environment, 'reward' is the normalized reward for the current action, 'done' reperesents if the environment has reached the final state of execution (to be defined during initialization), 'info' is a way to capture some intermediate variables for evalaution of the learner. This can involve individual variables that define the reward.
+Here by type we are refering to the object type in the programming setting.
+
+Now we will explain how to use PhysicsGym interface to define stabilization or trajectory matching problems. We will do so by using Phiflow library as the PDE solver but one can use any other library and appropriate conversion functions. Phiflow's physics interface consists of predefined routines that can perform diffusion or advection on the given state (field) which is what we are using in this thesis, but you can also define your own custom method using laplacian operators defined in phiflow. The physics interface comes with a step function that uses this routines and also applies the actions to update the state of the environment. Consider the problem discussed previously for controlling the heat equation. Here the domain is a 3d room and control action being the speed of fan. In the constructor of PhysicsGym implementation, we first define the domain(=3) and resolution(=0.25) which gives the total number of points (N) in the field to be (domain/resolution=) 12. We then define the observation space to be of shape equal to N and since the action space is scalar, the shape is a tuple (1,). The final thing needed for initialization is the physics object and for this scenario we will use Heat equation solver defined in Phiflow. Next in the reset method, we will define the initial state to be sampled from a uniform distribution of observation space and the reference state to be 0 for stabilization problems. For trajectory matching problems, the reference state will be the target vector. Following this, we will define the components of step method where the first step is to define action transformation function. In this scenario we use uniform distribution with the mean at the center of domain. This is equivalent to the fan being on the botton center of the room with the airflow directed towards the top. In real world scenario the airflow generated by fan can be calcualted more precisely with Navier-Stokes equation but to save computational time, we have used a uniform distribution to resemble airflow in the center of the room. On each update step, the agent receives reward which can be defined as the weighted sum of squared difference between the current state and the reference state. The step method also normalizes and one can use routines like Rootmeansquare from stable_baseleines3 for this. One important thing to note is, the agent performs action and then lets the environment simulate for certain number of steps with the same action before changing its action, this is done to make it more realistic. The number of steps involved in this simulation can be controlled separately while defining the environment.
+Pending: explain how the agents are created for random and MPC
+In the next section we will discuss some detailed experiments perfromed using PhysicsGym for controlling environments governed by Heat equation, Burgers equation and Kuramoto-Sivashinsky equation and evalaute the results for RL agent, random agent and MPC agent.
+
+
+
+
+In gym, an environment consists of 3 main methods, initialization, reset and step. On creation of new instance of environment, the constructor defines the environment's state space called the observation space and the agent's action space. Reset method creates/recreates the environment, defining its current state and the step method uses actions predicted by an rl agent to update the environment forward in time. Step method in gym framework always outputs updated environment state and a scalar reward.
+Our physics-gym environment also consists of methods similar to gym-interface but additionally some conversion methods to appropriately convert observations and actions between frameworks of reinforcement learning algorithm and partial differentiable solving libraries, in this case: Phiflow:
+
+
+Problem sepcifications:
+    constructor: 
+        - define physics object
+    reset:
+        - define initial state
+        - define target state
+    step:
+        - actions [1D] -> phiflow_actions [transform: f(x)]
+        - apply actions
+        - process observation and reward
+    reward:
+        - define reward
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

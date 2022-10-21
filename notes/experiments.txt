@@ -1,10 +1,73 @@
-Interface
-    - Physics Interface: how a pde is defined
-    - Environment Interface: interface between rl and pde
-    - Runner Interface: how to run an experiment
+In this chapter we will compare RL and MPC strategies by experiments for control of Heat equation, Burgers equation and Kuramoto-Sivashinsky equation.
+
+Experiment1: Heat equation control (3p)
+    - problem description (<0.5p)
+        - fig1a: initial state and target state 
+        - fig1b: different initial states (>0, <0)
+        - description
+    - uncontrolled simulation (<0.5p)
+        - fig2a: state transition diagram without control and reference state(0)
+        - optimal control
+            - fig2b: effect of optimal control sequence on states
+    - RL (1 1/3p)
+        - fig3: curr state >0, action and reference state at 4 timesteps (4 figures)
+        - fig4: curr state <0, action and reference state at 4 timesteps (4 figures)
+        - fig5: rewards and actions analysis
+    - MPC (1 1/3p)
+        - fig6: cont state >0, action and reference state at 4 timesteps (4 figures)
+        - fig7: cont state <0, action and reference state at 4 timesteps (4 figures)
+        - fig8: predicted actions analysis
+    - comparision: RL and MPC (1/3p)
+
+\fig 1a 1b
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+
+A state of environment created by PhysicsGym consists of domain (n) of points and their resolution (dx) that forms the dimension of state vector given by formula, N = n / dx. Here, the state of environment represents the temperature distribution in a room. Taking n=3, dx=0.25, our state vector consists of 12 points. Consider our environment is very diffusive, with a diffusion rate of D = 2.0 then under abritrary initial states, the goal of this experiment is to stabilize the heat equation to 0. Figure 1a shows the state X={x1,x2,...xn} in $BLUE$ initialized uniformly at random and the target state in $RED$. and Figure 1b shows different initial states, including both positive and negative values.*(expand)
+
+\fig 2a 2b
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+\fig
+When the environmet is not influenced by a controller, the heat equation balances itself by reducing the higher values and by increasing the lower values untill an equilibrium is achieved. This means that the heat exchange occurs between colder areas of the room and the hotter areas till the temperature is same everywhere. To stabilize the equation to 0, i.e. bringing the temperature down to 0, we will need to apply external control in the form of forces e.g. using a fan whose airflow is described by a vector field. fig2a shows how the aiflow from fan looks like and the the controller must choose the correct speed of the fan to bring the temperature down to 0 in a fixed number of steps. Here the speed of the fan is in between [-1.0, 1.0] which is used for scaling the magnitude of airflow from fan using the action_transform function as discussed previous chapter.
+
+For the initial state >0 in fig2b, the following negative control sequence achieves our goal, 
+An = [-0.4 if i<12 else 0.0 for all actions] and for initial state <0, the positive control sequence works, An=[0.4 if i < 12, else 0.0 for all actions]. Next we will train the RL agent to learn the optimal control sequence by using only the state description as input and the rewards calculated based on how far the state is from reference state.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // 9 pages approximately.
-
 Inverse Problem: Burgers equation (3p)
 - Introduction [PBDL]
     - burgers equation: what it is and its types and how it is used

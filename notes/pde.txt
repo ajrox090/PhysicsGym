@@ -220,3 +220,4 @@ Finite difference methods: (2/3 pages)
 References:
 \refa Numerical methods for Engineers
 \refx http://ndl.ethernet.edu.et/bitstream/123456789/32700/1/2.pdf.pdf
+https://www.control.tf.uni-kiel.de/en/teaching/summer-term/control-of-pde-systems/fileadmin/lecture_notes_2020

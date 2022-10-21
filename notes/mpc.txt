@@ -21,7 +21,7 @@ MPC (5-8p) [currently 3p]
 
 
 Model predictive control is a powerful optimization strategy for feedback control and has been around since 1980s. It involves using a system model to predict optimal control variables of a dynamic system.
-One factor for its popularity is the ability to handle multiple-input multiple-output (MIMO) systems, which the simple controllers like PID fail to optimally control, especially when there are multiple dependent input/output variables. 
+One factor for its popularity is its ability to handle multiple-input multiple-output (MIMO) systems, which the simple controllers like PID fail to optimally control, especially when there are multiple dependent input/output variables. 
 Another factor is its ability to incorporate constraints which can involve limiting the domain of control parameters that resembles a real world scenario. For example, consider a control problem of keeping an autonomous car in the desired lane. The plant is the environment in which car is driven e.g. the road with cars in different lanes and the control parameter is the speed of car being controlled. So, a boundary condition could be, the speed of car cannot exceed the speed limit which can be incorporated in MPC by bounding the domain of speed of the car with the speed limit.
 Despite these benefits, MPC does require a powerful and fast processor since it solves the optimization problem in an online manner at each timestep. 
 

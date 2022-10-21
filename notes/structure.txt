@@ -30,24 +30,7 @@ References
 
 Abstract         (1p)
 
-1) Introduction     (2p)   (formal in a philosophical way)
-    1.1) pde control    (1/2)
-        1.2.1) what is pde control and why is it relevant?
-        1.2.2) some applications of pde control for chaotic systems[Kuramoto Sivashinsky] and complex fluid systems[Cylinder2DFlowDRL] such as HVAC [HeatInvader]
-    1.2) mpc    (1/2)
-        1.2.1) what is mpc and its success stories
-        1.2.2) why does mpc work and its limitations
-    1.3) rl (general introduction)     (1/2)
-        1.3.1) what is RL and its success stories
-        1.3.2) why does RL work and its limitations
-    1.4) thesis (1/2)
-        1.4.1) describe the current usage of rl in the `pde control` field and motivate the need for  an interface.
-        1.4.2) my main contributions with this thesis:
-            1) interface (physics and environment interface)
-                - how did I design the interface, what considerations did we take into account?
-            2) what can the interface be used for ?
-                - and what not?
-        1.4.3) how is the rest of the thesis arranged?
+1) Introduction     (2p)
 
 2) Related Work     (2p)
 
