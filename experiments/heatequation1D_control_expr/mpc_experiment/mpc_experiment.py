@@ -35,7 +35,9 @@ def run(N: int = 1, _env=None, ph: int = 5, label: str = "",
         while not done:
             action = agent.predict(observation=obs)
             total_actions[i][_env.step_idx-1] = action[0]
-            if _env.step_idx == int(_env.step_count / 10):
+            # if _env.step_idx % int(_env.step_count // 20) == 0:
+            # if _env.step_idx < _env.step_count:
+            if _env.step_idx in [1, 15, 30, 60, 120, 299]:
                 _env.enable_rendering()  # only show final state during testing
             obs, reward, done, info = _env.step(action)
             if _env._render:
@@ -45,15 +47,13 @@ def run(N: int = 1, _env=None, ph: int = 5, label: str = "",
 
     print(f'Average reward for {label}: {np.array(rewards).mean()}')
     with open("output.txt", "a") as f:
-        f.write("\n")
-        f.write(f'actions for {label}: \n{total_actions}\n')
-        f.write("-------------------------------------------------------------------------------")
+        f.write(f'\nactions for {label}: \n{total_actions}\n')
+        f.write("-------------------------------------------------------------------------------\n")
     return np.array(final_states).mean(axis=0)
 
 
-lr = 0.0001
-N = 5
-step_count = 100
+N = 2
+step_count = 300
 dxdt = 5
 dx = 0.25
 domain = 3
@@ -61,16 +61,18 @@ domain_dict = dict(x=int(domain / dx), bounds=Box[0:1],
                    extrapolation=extrapolation.BOUNDARY)
 env = HeatPhysicsGymNoRMS(domain=domain, dx=dx, domain_dict=domain_dict,
                           dt=0.01, step_count=step_count,
-                          diffusivity=2.0, dxdt=dxdt)
+                          diffusivity=2.0, dxdt=dxdt,
+                          saveFig=True, title="experiment1", plotFolder="plots")
 
 print("MPC")
-ph = 10
-for _ in range(1):
-    print("train-store")
-    x = time.time()
-    mpc_state = run(_env=env, label="mpc_experiment1", u_min=-1.0, u_max=1.0, ph=ph)
-    print(f'{time.time() - x} seconds elapsed for mpc_experiment.py.')
-    print("--------------------------------------------------------------------------------")
+ph = 4
+
+label = 'mpc_experiment1'
+print(label)
+x = time.time()
+mpc_state = run(_env=env, label=label, u_min=-1.0, u_max=1.0, ph=ph)
+print(f'{time.time() - x} seconds elapsed for mpc_experiment.py.')
+print("--------------------------------------------------------------------------------")
 
 print("visualization")
 plotGrid([mpc_state], domain=domain, dx=dx, label=['mpc_state'])

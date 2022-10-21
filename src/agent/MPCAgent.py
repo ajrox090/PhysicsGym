@@ -28,6 +28,7 @@ class MPCAgent(BaseAlgorithm):
         super().__init__(policy=MlpPolicy, env=env, learning_rate=1.0)
         self.env = env
         self.ph = ph
+        # self.Q = np.array([0.7 if i < 4 else 1.0 for i in range(env.N)])
 
         # self.u0 = np.random.uniform(u_min, u_max, self.ph)
         self.u0 = np.zeros(self.ph)
@@ -45,8 +46,10 @@ class MPCAgent(BaseAlgorithm):
             episode_start: Optional[np.ndarray] = None,
             deterministic: bool = False,
     ) -> Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]:
+
         res = minimize(lambda u: self.cost_function(u, observation),
-                       self.u0, method='SLSQP', bounds=self.bounds)  # Nelder-Mead
+                       self.u0, method='SLSQP', bounds=self.bounds,
+                       options={'eps': 1e-1})
 
         self.u0[:-1] = res.x[1:]
         self.u0[-1] = res.x[-1]
@@ -54,6 +57,7 @@ class MPCAgent(BaseAlgorithm):
         if not res.success:
             raise Warning("Failed to find minimum")
 
+        print(f'{res.x} : {res.fun}')
         return [res.x[0]]
 
     def cost_function(self, u_, y0_):
@@ -64,10 +68,11 @@ class MPCAgent(BaseAlgorithm):
             y0_ = self.env.step_physics(in_state=y0_,
                                         effects=(self.env.scalar_action_to_forces([u_[ii]]),))
 
-        loss = -np.sum(((y0_.data.native("vector,x")[0] - self.env.reference_state_np) ** 2) / self.env.N, axis=-1)
+        loss = np.sum(((y0_.data.native("vector,x")[0] - self.env.reference_state_np) ** 2) / self.env.N, axis=-1)
         loss = np.sum(loss, axis=0)
+        # loss = np.sum((y0_.data.native("vector,x")[0]) ** 2 / self.env.N)
         # loss = np.sum((y0_ - self.env.reference_state_np) ** 2) / self.env.N
-        print(f"{u_},{loss}")
+        # print(f"{u_},{loss}")
         return loss
 
     def _setup_model(self) -> None:

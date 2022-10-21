@@ -2,7 +2,6 @@ import copy
 import phi.math
 import numpy as np
 from matplotlib import pyplot as plt
-from phi import vis
 
 from phi.field import CenteredGrid
 from phi.physics._effect import FieldEffect
@@ -12,7 +11,7 @@ from src.env.PhysicsGym import PhysicsGym
 from src.env.physics.heat import Heat
 
 
-np.random.seed(0)
+# np.random.seed(0)
 
 
 class HeatPhysicsGym(PhysicsGym):
@@ -109,7 +108,10 @@ class HeatPhysicsGymNoRMS(PhysicsGym):
                  domain_dict=None,
                  dt: float = 0.01,
                  diffusivity: int = 0.3,
-                 dxdt: int = 100):
+                 dxdt: int = 100,
+                 saveFig: bool = False,
+                 title: str = "experiment1",
+                 plotFolder: str = "plots"):
         super(HeatPhysicsGymNoRMS, self).__init__(domain, dx, dt, step_count,
                                                   domain_dict, reward_rms=RunningMeanStd(), dxdt=dxdt)
 
@@ -119,6 +121,10 @@ class HeatPhysicsGymNoRMS(PhysicsGym):
         self.reward = np.zeros(self.step_count+1)
         self.previous_rew = []
         self.reset()
+
+        self.saveFig = saveFig
+        self.title = title
+        self.plotFolder = plotFolder
 
     def reset(self):
         self.step_idx = 0
@@ -168,6 +174,8 @@ class HeatPhysicsGymNoRMS(PhysicsGym):
         plt.ylim(-3, 3)
         plt.legend()
         plt.title(title + f' {self.step_idx} step')
+        if self.saveFig:
+            plt.savefig(f'{self.plotFolder}/{self.title}/{self.step_idx}.pdf',  bbox_inches='tight')
         plt.show()
 
     def _build_obs(self) -> np.ndarray:

@@ -1,10 +1,7 @@
-import copy
-
 import gym
 import numpy as np
 import phi
 from phi import math
-from scipy.optimize import minimize, Bounds
 from scipy.stats import norm
 from typing import Optional, Tuple
 
@@ -12,7 +9,6 @@ from phi.field import Field, CenteredGrid
 from phi.math import tensor, inf
 from phi.physics._effect import FieldEffect
 from stable_baselines3.common.running_mean_std import RunningMeanStd
-from tqdm import tqdm
 
 
 class PhysicsGym(gym.Env):
@@ -112,7 +108,7 @@ class PhysicsGym(gym.Env):
         return forces.field.data.native("vector,x")[0]
 
     def simpleUniformRandom(self, x):
-        return tensor(-np.random.uniform(0, 0.5, self.N), x.shape[0])
+        return tensor(np.random.uniform(0, 0.5, self.N), x.shape[0])
 
     def simpleNormalDistribution(self, x):
         return tensor(norm(0, 0.1).pdf(x.native("vector,x")[0]) / 2, x.shape[0])
