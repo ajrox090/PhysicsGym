@@ -2,6 +2,7 @@ import copy
 
 import gym
 import numpy as np
+import phi
 from phi import math
 from scipy.optimize import minimize, Bounds
 from scipy.stats import norm
@@ -51,6 +52,8 @@ class PhysicsGym(gym.Env):
         self.reward_rms = reward_rms
         self.reward_range = (-float('inf'), float('inf'))
 
+        self._render = False
+
     def reset(self):
         """ set: - initial state, cont state and reference state
             returns: observation """
@@ -74,6 +77,12 @@ class PhysicsGym(gym.Env):
             in_state = self.physics.step(in_state, dt=self.dt, effects=effects)
         return in_state
 
+    def enable_rendering(self):
+        self._render = True
+
+    def disable_rendering(self):
+        self._render = False
+
     def _get_obs_shape(self):
         return self.N,
 
@@ -93,17 +102,20 @@ class PhysicsGym(gym.Env):
         x = np.arange(0, self.domain, self.dx)
         return alpha * rv.pdf(x) / 2
 
+    def scalar_action_to_forces(self, actions: np.ndarray):
+        return FieldEffect(CenteredGrid(phi.math.tensor(self.action_transform(actions[0]).reshape(
+            self.cont_state.data.native("x,vector").shape[0]), self.cont_state.shape), **self.domain_dict),
+            ['temperature_effect'])
+
+    @staticmethod
+    def forces_to_numpy(forces: FieldEffect):
+        return forces.field.data.native("vector,x")[0]
+
     def simpleUniformRandom(self, x):
-        return tensor(np.random.uniform(0, 0.5, self.N), x.shape[0])
+        return tensor(-np.random.uniform(0, 0.5, self.N), x.shape[0])
+
+    def simpleNormalDistribution(self, x):
+        return tensor(norm(0, 0.1).pdf(x.native("vector,x")[0]) / 2, x.shape[0])
 
     def justOnes(self, x):
-        return tensor([-1.0 for _ in range(self.N)], x.shape[0])
-
-
-
-
-
-
-
-
-
+        return tensor([1.0 for _ in range(self.N)], x.shape[0])

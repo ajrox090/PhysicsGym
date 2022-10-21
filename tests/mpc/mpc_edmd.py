@@ -6,6 +6,7 @@ import time
 from scipy.optimize import minimize
 from scipy.optimize import Bounds
 
+
 font = {'size': 16}
 matplotlib.rc('font', **font)
 matplotlib.rcParams['text.usetex'] = True
@@ -25,9 +26,6 @@ dimY = 2  # dimension of state space
 u_min = -10.0  # lower bound for control
 u_max = 10.0  # upper bound for control
 
-V = [u_min, u_max]  # finite set of admissible controls in (II) and (III)
-nu = len(V)  # dimension of V
-
 Q = [1.0, 0.1]  # weights on the diagonal of the Q-matrix in the objective function
 
 y0 = [1.0, 0.0]  # initial condition for y
@@ -42,16 +40,6 @@ u0 = np.zeros(nt, )  # initial guess for control u
 
 y_ref = np.zeros((nt, 2))  # reference trajectory on fine grid
 y_ref2 = y_ref[::facU, :]  # reference trajectory on coarse grid
-
-
-def coarseGridToFine(x_):
-    if facU == 1:
-        return x_
-    y_ = np.zeros(nt, dtype=float)
-    for ii in range(nt2 - 1):
-        y_[facU * ii: facU * (ii + 1)] = x_[ii]
-    y_[-1] = x_[-1]
-    return y_
 
 
 def ODE(u_, y0_):
@@ -73,15 +61,6 @@ def Phi(u_, y0_):
     return y_[-1, :]
 
 
-def J_I(u_):
-    dy = ODE(u_, y0) - y_ref
-    dyQ = np.zeros(dy.shape[0], dtype=float)
-    for ii in range(dy.shape[1]):
-        dyQ += Q[ii] * np.power(dy[:, ii], 2)
-
-    return h * np.sum(dyQ)
-
-
 p = 10  # Prediction horizon on coarse grid
 T = 1.0  # New final time
 nt2 = round(T / dt) + 1  # number of time steps on coarser grid for SUR
@@ -97,7 +76,7 @@ y_ref2[np.where(t2 <= 2.0), 0] = 1.0
 print('Solve (I) via MPC with T = {:.1f} ...'.format(T))
 
 
-# Refdefine J_I with shorter reference trajectory
+# Redefine J_I with shorter reference trajectory
 def J_I_MPC(u_, y0_, y_ref_):
     # calculate trajectory using the time-T-map Phi
     y_ = np.zeros((p + 1, 2))
@@ -115,7 +94,9 @@ def J_I_MPC(u_, y0_, y_ref_):
     for ii in range(dy.shape[1]):
         dyQ += Q[ii] * np.power(dy[:, ii], 2)
 
-    return dt * np.sum(dyQ)
+    out = dt * np.sum(dyQ)
+    print(f"{u_},{out}")
+    return out
 
 
 # initialize arrays for MPC solution
@@ -124,8 +105,10 @@ yI_MPC[0, :] = y0
 uI_MPC = np.zeros(nt2)
 
 # initial guess for first optimization problem
-u0 = 0.5 * (u_max + u_min) * np.ones(p) + 0.1 * (np.random.rand(p) - 0.5) * (u_max - u_min)
+u0 = 0.5 * (u_max + u_min) * np.ones(p) + 0.1 * \
+     (np.random.rand(p) - 0.5) * (u_max - u_min)
 
+# u0 = -1 * np.ones(p)
 # box constraints u_min <= u <= u_max
 bounds = Bounds(u_min * np.ones(p, dtype=float), u_max * np.ones(p, dtype=float))
 
@@ -139,9 +122,10 @@ for i in range(nt2):
     ie = np.min([nt2, i + p + 1])
 
     # call optimizer
-    res = minimize(lambda utmp: J_I_MPC(utmp, yI_MPC[i, :], y_ref2[i: ie, :]), u0, method='SLSQP', bounds=bounds)
+    res = minimize(lambda utmp: J_I_MPC(utmp, yI_MPC[i, :], y_ref2[i: ie, :]),
+                   u0, method='SLSQP', bounds=bounds)
 
-    # retreive first entry of u and apply it to the plant
+    # retrieve first entry of u and apply it to the plant
     uI_MPC[i] = res.x[0]
     if i < nt2 - 1:
         yI_MPC[i + 1, :] = Phi(uI_MPC[i], yI_MPC[i, :])
@@ -152,3 +136,5 @@ for i in range(nt2):
 
 tI_MPC = time.time() - t0
 print('-> Done in {:.2f} seconds.\n'.format(tI_MPC))
+
+# plotGrid(yI_MPC, domain)

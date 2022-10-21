@@ -1,12 +1,10 @@
-import copy
-from tqdm import tqdm
 from matplotlib import pyplot as plt
-
 from phi.flow import *
-from stable_baselines3 import PPO, DDPG
-from stable_baselines3.ppo import MlpPolicy as MlpPolicy_ppo
-from stable_baselines3.ddpg import MlpPolicy as MlpPolicy_ddpg
+from stable_baselines3 import DDPG, PPO
+from tqdm import tqdm
 
+from src.agent.MPCAgent import MPCAgent
+from src.agent.RandomAgent import RandomAgent
 from src.env.BurgersPhysicsGym import BurgersPhysicsGym
 
 
@@ -18,87 +16,150 @@ def plotGrid(listU, domain: int, dx: float, label: list[str]):
         plt.plot(x, u, label=lab)
     plt.xlim(0, domain)
     plt.ylim(-3, 3)
+    plt.xlabel("domain")
+    plt.ylabel("range")
     plt.legend()
     plt.show()
 
 
-dx = 0.25
-domain = 4
-step_count = 100
+def run(_env=None, agent=None, title: str = 'Uncontrolled', N: int = 1, extra_step_count: int = 0):
+    reward = 0.0
+    total_rewards = []
+    total_actions = np.zeros((N, _env.step_count), dtype=float)
+    finalstateOfEachCycle = []
+
+    # perform cycles
+    for i in range(N):
+        obs = _env.reset()
+        done = False
+        while not done:
+            if agent is None:
+                action = [0]
+                # if env.step_idx < 8:
+                #     action = [-1.0]
+            else:
+                action = agent.predict(observation=obs)
+                total_actions[i][env.step_idx] = action[0]
+            obs, reward, done, info = _env.step(action)
+            # if done:
+            #     for _ in range(extra_step_count):
+            #         obs, _, _, _ = _env.step([0.0])
+        total_rewards.append(reward)
+        finalstateOfEachCycle.append(obs)
+
+    print(f'Total mean reward for {title} agent: {np.array(total_rewards).mean()}')
+    print(f'Actions: \n {total_actions}')
+    return np.array(finalstateOfEachCycle).mean(axis=0)
+
+
+def run_ddpg(save_model: str = None, load_model: str = None,
+             learn: bool = False, N: int = 1):
+    env.reset()
+    if load_model is not None:
+        agent_ddpg = DDPG.load(load_model)
+        agent_ddpg.set_env(env)
+    else:
+        agent_ddpg = DDPG(verbose=0, env=env, learning_rate=lr, policy='MlpPolicy')
+    if learn:
+        print("training begin")
+        agent_ddpg.learn(total_timesteps=step_count * n_epochs)
+        print("training complete")
+        if save_model is not None:
+            agent_ddpg.save(save_model)
+    return run(_env=env, agent=agent_ddpg, title='DDPG', extra_step_count=0, N=N)
+
+
+def run_ppo(N: int = 1):
+    env.reset()
+    # agent_ppo = PPO(verbose=1, env=env, learning_rate=lr, policy='MlpPolicy', tensorboard_log='/log')
+    # agent_ppo.learn(total_timesteps=step_count * n_epochs, tb_log_name=f'{time.time()}_ppo')
+    agent_ppo = PPO(verbose=0, env=env, learning_rate=lr, policy='MlpPolicy')
+    agent_ppo.learn(total_timesteps=step_count * n_epochs)
+
+    return run(_env=env, agent=agent_ppo, title='PPO', N=N)
+
+
+def run_random(N: int = 1):
+    env.reset()
+    agent_random = RandomAgent(env=env)
+
+    return run(_env=env, agent=agent_random, title='Random', N=N)
+
+
+def run_uncontrolled(N: int = 1):
+    env.reset()
+    return run(_env=env, N=N)
+
+
+def run_mpc(N: int = 1, ph: int = 10):
+    env.reset()
+    agent_mpc = MPCAgent(env=env, ph=ph, u_min=-1.0, u_max=1.0)
+
+    return run(_env=env, agent=agent_mpc, title='MPC', N=N)
+
+
+class Aagent:
+    def __init__(self, actions, env):
+        self.actions = actions
+        self.env = env
+
+    def predict(self, observation=None):
+        return np.array([self.actions[env.step_idx]])
+
+
+def run_manual_control(actions):
+    env.reset()
+    agent = Aagent(actions, env)
+    run(env, agent, title='manual')
+
+
+lr = 0.0001
+n_epochs = 10
+
+dx = 0.05
+domain = 3
+step_count = 200
 domain_dict = dict(x=int(domain / dx), bounds=Box[0:1],
-                   extrapolation=extrapolation.BOUNDARY)
-dt = 0.01
+                   extrapolation=extrapolation.PERIODIC)
+env = BurgersPhysicsGym(domain=domain, dx=dx, domain_dict=domain_dict,
+                        dt=0.001, step_count=step_count,
+                        viscosity=0, dxdt=10)
+env.reset()
+init_state = env.init_state.data.native("vector,x")[0]
+# optimal_actions = [(-0.2 if i < step_count else 0.0) for i in range(step_count)]
+# run_manual_control(optimal_actions)
+N = 1
+# ph = 10
 
-env_krargs = dict(domain=domain, dx=dx, domain_dict=domain_dict,
-                  dt=dt, step_count=step_count,
-                  viscosity=0.03)
-
-agent_krargs_ppo = dict(verbose=2, policy=MlpPolicy_ppo,
-                        n_steps=step_count,
-                        n_epochs=10000,
-                        learning_rate=0.0001,
-                        batch_size=step_count)
-
-agent_krargs_ddpg = dict(verbose=1, policy=MlpPolicy_ddpg,
-                         learning_rate=0.0001,
-                         batch_size=step_count)
-
-print("DDPG")
-env_ddpg = BurgersPhysicsGym(**env_krargs)
-# env_ddpg.init_state = copy.deepcopy(env_ppo.init_state)
-_ = env_ddpg.reset()
-agent_ddpg = DDPG(env=env_ddpg, **agent_krargs_ddpg)
-agent_ddpg.learn(total_timesteps=step_count)
-# env_ddpg.render(mode='final', title='rl control ddpg')
-
-
-env_ppo = BurgersPhysicsGym(**env_krargs)
-env_ppo.init_state = copy.deepcopy(env_ddpg.init_state)
-_ = env_ppo.reset()
-print("PPO")
-agent = PPO(env=env_ppo, **agent_krargs_ppo)
-agent.learn(total_timesteps=step_count)
-# # env.render(mode='final', title='rl control ppo')
-
-print("random agent")
-env_random = BurgersPhysicsGym(**env_krargs)
-env_random.init_state = copy.deepcopy(env_ddpg.init_state)
-# env_random.init_state = copy.deepcopy(env_ppo.init_state)
-_ = env_random.reset()
-for i in tqdm(range(step_count)):
-    action = [env_random.action_space.sample()]
-    obs, _, _, _ = env_random.step(action)
-# env_random.render(mode='final', title='random control')
-
+# print("PPO")
+# ppo_state = run_ppo()
+# print("DDPG")
+# ddpg_state = run_ddpg(load_model="ddpgAgent.zip", N=N,
+# #                       learn=True, save_model="ddpgAgent_burgers")
+# ddpg_state = run_ddpg(load_model="ddpgAgent_burgers", N=N)
+# ddpg_state = run_ddpg(N=N, learn=True, save_model="ddpgAgent_burgers")
+# print("random agent")
+# random_state = run_random(N=N)
 print("uncontrolled")
-env_uncontrolled = BurgersPhysicsGym(**env_krargs)
-env_uncontrolled.init_state = copy.deepcopy(env_ddpg.init_state)
-# env_uncontrolled.init_state = copy.deepcopy(env_ppo.init_state)
-_ = env_uncontrolled.reset()
-u = env_uncontrolled.init_state
-for i in tqdm(range(step_count)):
-    u = env_uncontrolled.physics.step(u, dt=dt)
+uncontrolled_state = run_uncontrolled(N=N)
+# print("MPC")
+# mpc_state = run_mpc(N=N, ph=ph)
 
-print("visualization")
+# print("visualization")
 plotGrid([
-    env_ppo.init_state.data.native("vector,x")[0],
-    env_ppo.final_state.data.native("vector,x")[0],
-    env_ddpg.final_state.data.native("vector,x")[0],
-    env_random.final_state.data.native("vector,x")[0],
-    u.data.native("vector,x")[0],
-    # env_ddpg.reference_state_phi.data.native("vector,x")[0]],
-    env_ppo.reference_state_phi.data.native("vector,x")[0]],
+    # init_state,
+    # ddpg_state,
+    # ppo_state,
+    # random_state,
+    uncontrolled_state,
+    # mpc_state
+],
     domain=domain, dx=dx,
     label=[
-        'initial state',
-        'rl ppo final',
-        'rl ddpg final',
-        'random agent final',
-        'uncontrolled final',
-        'target state'])
-
-plt.plot(env_ppo.previous_rew, label='ppo reward')
-plt.plot(env_ddpg.previous_rew, label='ddpg reward')
-plt.legend()
-plt.title("RL Rewards for PPO and DDPG")
-plt.show()
+        # 'initial state',
+        # 'ddpg state',
+        # 'ppo state',
+        # 'random state',
+        'uncontrolled state',
+        # 'mpc state'
+    ])

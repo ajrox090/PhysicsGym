@@ -1,11 +1,12 @@
 import numpy as np
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Type, Union
 from scipy.optimize import Bounds, minimize
 
 import phi
 from phi import math
 from phi.field import CenteredGrid, Grid, Field
 from phi.physics._effect import FieldEffect
+from stable_baselines3.common.policies import BasePolicy
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from stable_baselines3.ppo import MlpPolicy
@@ -20,25 +21,20 @@ class MPCAgent(BaseAlgorithm):
 
     def __init__(self, env: PhysicsGym,
                  ph: int = 10,  # prediction horizon,
-                 init_control: np.ndarray = None,  # initial control
                  u_max: float = 1.0,  # max control input
                  u_min: float = -1.0,  # min control input
+                 u0: np.ndarray = None,  # initial control
                  ):
         super().__init__(policy=MlpPolicy, env=env, learning_rate=1.0)
         self.env = env
         self.ph = ph
-        # self.init_control = np.random.uniform(u_min, u_max, self.ph)
-        self.init_control = np.zeros(self.ph)
-        # self.init_control = np.ones(self.ph)
-        # self.Q = [(1.0 if i < self.env.N // 2 else 0.1) for i in range(self.env.N)]
+
+        # self.u0 = np.random.uniform(u_min, u_max, self.ph)
+        self.u0 = np.zeros(self.ph)
 
         self.bounds = tuple(zip([u_min for _ in range(self.ph)], [u_max for _ in range(self.ph)]))
-        print(self.bounds)
-        # self.bounds = Bounds(u_min, u_max)
 
-        # self.constraints = ({'type': 'ineq', 'fun': lambda x: np.sum(x) - 9.0})
-
-        self.ref_states_np = np.array([env.reference_state_np.flatten() for _ in range(self.ph)])
+        self.ref_state = env.reference_state_np.flatten()
         self.shape_nt_state = env.init_state.data.native("x,vector").shape[0]
         self.shape_phi_state = env.init_state.shape
 
@@ -49,44 +45,30 @@ class MPCAgent(BaseAlgorithm):
             episode_start: Optional[np.ndarray] = None,
             deterministic: bool = False,
     ) -> Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]:
+        res = minimize(lambda u: self.cost_function(u, observation),
+                       self.u0, method='SLSQP', bounds=self.bounds)  # Nelder-Mead
 
-        res = minimize(lambda cont: self.cost_function(cont, observation, self.ref_states_np),
-                       self.init_control, method='SLSQP', bounds=self.bounds)  # Nelder-Mead
-        # res.x = self.env.dt * res.x
+        self.u0[:-1] = res.x[1:]
+        self.u0[-1] = res.x[-1]
 
-        self.init_control[:-1] = res.x[1:]
-        self.init_control[-1] = res.x[-1]
         if not res.success:
             raise Warning("Failed to find minimum")
-        # else:
-        #     print("success")
+
         return [res.x[0]]
 
-    def cost_function(self, actions: np.ndarray, curr_state: np.ndarray, ref_states: np.ndarray):
-        """
-            step1 -> update the environment for finite number of prediction horizon in the presence of control element u_
-            step2 -> extract target trajectories from y_gt_native of size = prediction horizon
-            step3 -> calculate weighted difference
-        """
-        state = CenteredGrid(phi.math.tensor(curr_state, self.shape_phi_state), **self.env.domain_dict)
-        states = []
+    def cost_function(self, u_, y0_):
 
-        for i in tqdm(range(self.ph)):
-            action = FieldEffect(CenteredGrid(
-                phi.math.tensor(self.env.action_transform(actions[i]).reshape(self.shape_nt_state),
-                                self.shape_phi_state),
-                **self.env.domain_dict), ['effect'])
-            state = self.env.step_physics(in_state=state, effects=(action,))
-            states.append(state.data.native("vector,x")[0])
+        y0_ = CenteredGrid(phi.math.tensor(y0_, self.shape_phi_state), **self.env.domain_dict)
 
-        dy = np.array(states) - ref_states
-        dyQ = np.zeros(dy.shape[0], dtype=float)
+        for ii in range(self.ph):
+            y0_ = self.env.step_physics(in_state=y0_,
+                                        effects=(self.env.scalar_action_to_forces([u_[ii]]),))
 
-        for ii in range(dy.shape[1]):
-            dyQ += np.power(dy[:, ii], 2)
-
-        # return self.env.dt * np.sum(dyQ)
-        return np.sum(dyQ) / self.env.N
+        loss = -np.sum(((y0_.data.native("vector,x")[0] - self.env.reference_state_np) ** 2) / self.env.N, axis=-1)
+        loss = np.sum(loss, axis=0)
+        # loss = np.sum((y0_ - self.env.reference_state_np) ** 2) / self.env.N
+        print(f"{u_},{loss}")
+        return loss
 
     def _setup_model(self) -> None:
         pass
