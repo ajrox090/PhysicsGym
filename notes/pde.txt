@@ -77,126 +77,82 @@ PDE [5p] (currently ~5p)
     - visualization for a finite time period
     - applcation to control
 
-Partial differential equations (PDE) are used to mathematically formulate laws of physics that involve multiple variables. They are used to describe physical phenomena like flow of fluid inside a cylinder, heat dissipation, propagation of sound waves, electrodynamics, etc. Technically speaking the three main components forming a PDE are multiple independent variables, an unknown function of these variables and the partial derivatives of this function. Before diving into PDE, lets understand a more simple form of differential equations called Ordinary differential equations (ODE) that are made up of only a single independent variable. It also consists of an unknown function and its partial derivatives that describes the change in a physical quantity with respect to time.
-
-ODEs can be used to model some interesting physical phenomena like movement of electricity, to and fro motion of a pendulum, and various concepts related to exchange of energy in a simple system. A simple ODE is given by dy/dt = ky; where k is a constant and y is the independent variable. The solution to this ode can be given by y(t) = C e^(kt) where C is a constant. This solution represents exponential growth and decay for k>0 and k<0 respectively. Another simple ode representing wave propagation with a degree of 2 is given by: d2y/dt3 + W2y = 0; w represents the constant frequency of oscilation of particles forming the wave. A solution to this ODE can be given by: y(t) = A sin(wt + O/); Here, A is the amplitude of the wave and O/ is the phase. This ODE represents a simple harmonic motion of a particle exhibiting periodic behavior in time.
-
-Although ODEs are useful for modeling many simple physical phenomena, when it comes to complex systems, it is not enough to represent a physical system by using just a single variable. For such purposes, partial differential equations compe into play. As described earlier, PDEs consists of two or more variables used to model more complex physical systems. One such example is a convection-diffusion equation  /equation/.  Here, u is the independent variable which represents velocity of fluid, or temperature in a heat transfer system. D is the diffusivity constant e.g. diffusivity of a particle in motion, thermal diffusivity or viscosity in terms of fluid flow and v is the velocity of particle w.r.t time. When the diffusivity represents the viscosity of fluid, the above equation becomes viscous burgers equaiton which represents velocity of particle at each point in time using a convection-diffusion mechanicsm.
-
-We now formulate partial differential equations as physical models as described in the book, "Physics based deep learning"[]. In this thesis, we mainly focus on continuous PDEs say P*. The solution of P* lies in the spatial domain /equation/ in d 1,2,3 dimensions. This domain could present a 3d room in case of heat transfer system or a 3d cylinder in case of fluid flow system. The independent variables could be either scalar or vector fields e.g. the pressure can be presented by a scalar field p:RXR->R where as the velocity of a particle at each point in time for a given space is a d-dimensional vector field given by u:R X R -> R. A 3d vector will be represented as u = (ux,uy,uz) where x,y,z->O. In the book [], they have used numerical methods to discretize this continuous pde and then step the pde forward in time with time steps of ^t. We will consider the solution as expressed in the book, u(x,t+^t) = P(ux,uxx,uxxx...x) where ux denotes the spatial derivatives du(x,t)/dx.
-
-Solving PDEs
-There are two well known methods for solving pde, analytical methods and numerical methods. In general analytical solutions for a pde problem are exact solutions while numerical solutions are finite approximations. An analytical solution involves well-formed understanding of a problem to calculate this exact solution. For example, consider a pde that can be represented as a linear mapping for multiple odes for which an exact solution is known, an analytical soultion could involve solving these individual odes and then averaging each solution. However, such a solution requires  complete knowledge of how the problem works which is impossible for many continuous problems. Hence, comes numerical solutions to the rescue. Roughly speaking numerical solutions involve framing the problem and using trial and error across a set of candidate solutions [pl*]. This gives satisfactory results especially because often times we are concerned with an approximately good solution rather than an exact solution. There are many numerical methods for solving a pde, viz Finite element method, finite differences method, finite volume, etc. All these methods use discretization to approximate solution to PDE which involves evolving a discrete set of values and by taking small steps in time to approximate the continuous function of space and time[\refx].
-
-Finite Difference Method
-Finite difference methods are numerical methods for approximating solutions to a PDE by approximating derivatives with finite differences. For example, consider an ordinary differential equation of the form:
-\equation in my book
-The Euler's method for solving this equation is given by
-\equation in my book
-where t(x + h) is the finite difference term. Substituting the value of t'(x) from ODE, we get,
-\derivation equation
-
-This constitutes the finite difference equation for this ODE and solving this equation, gives an approximate solution to this equation. The finite difference method is well formulated in the chapter 20 of the book "Numerical methods for Engineers". Here we will only briefly explain this method using an example from the book for laplace equation. For more equations like other elliptic or parabolic equations, please refer to chapters 29 and 30 of the book.
-
-To understand how the finite difference method works in more detail, we consider the simple laplace equation which can be used to model a variety of problems involving the potential of an unknown variable[\a]. The second-order linear laplace equation is given by
-\equation from my book
-
-Consider a square grid as the domain, (del i,j)* where i,j represents points in x and y direction of domain respectively. the centeral differences are given by
-\equation from my book
-\equation from my book
-Since the grid is square, (x = y)*, the laplace difference equation becomes,
-\equation from my book
-In order to obtain the exact solution of any PDE, the boundary conditions need to be specified. Consider the dirichlet boundary conditions, which basically means setting each boundary of the grid to some constant value as shown in the figurex, Now solving for i=1,j=1, we get,
-\equation from my book
-We know from the boundary conditions that t01 = 75, t10 = 0, substituting this we get,
-\equation from my book
-Similarly rest of the equations can be calculated for other values of i,j in the grid and solving these equations will give the approximate solution using finite difference method. Also, since the grid is quite small, it is possible to calculate the equations by hand but in practice, there is a method called "The Liebman method" that is used for calculation of complex grids. (refer to chapter 29 of book [] for more detail).
-
-The finite differences method introduced before doesn't work well for irregular geometry, complex boundary conditions or for heterogenous compositions[]. For this, the alternative is finite element method which first divides the solution domain into elements which are simpler in shape and then finds an approximate solution for each element function thereby assembling them into a unified solution. As in the previous method, we provide a brief description of steps involved in solving a PDE with finite element method. For more thorough explanation one may refer to chapter 31 of the book "Numerical methods for engineers"
-
-Finite Elements Method
-The general implementation of finite element method consists of 5 main steps: discretization, element equations, assembly, boundary conditions and solution. The discretization step invovles dividing the domain into finite number of elements e.g.
-For one dimensional domain, a line, the division can be done by divding the line using finite number of points on the line. For two dimensional, one can use traingualr elements or quadrilateral elements and for three dimensional, a plane of a hexahedron shape can be used for discretizing the domain. The second step is to develop differential equations for each discretized elements. This consists of two steps. First, step invovles choice of approximate functions a.k.a. basis functions that is used for approximating the individual elements. For example, consider the following equation of line[],
-\equation
-
-where u(x) is the dependent variable, a0 and a1 are the constants and x is the independent variable. Here, the dependent variable can be written as a linear combination of approximate functions as follows,
-u = N1u1 + N2u2
-where u1 and u2 are the approximate functions with,
-\equation
-The next step is to find the right value for quoeficients that can help solve the problem optimally which involves methods like variational approach and the method of weighing residuals[b]. Once the individual element functions are developed, they are assembled in the next step which invovles combining all the individual element equations into one unified equation that represents the entire system. Then, the boundary conditions are applied on this unified system before finally solving the system using methods like LU decomposition.[b]
-
-Next we will discuss 4 PDEs, burgers euqation for fluid flow, heat equation for temperature change, Navier-Stokes equation for fluid flow and Kuramoto-Sivashinsky equation for flame.
+\chapter{Partial Differential Equations}
+\label{ch:pde}
 
 
 
 
 
-PDE Examples
-Burgers Equation is one of the simplest PDEs describing the velocity of fluid with respect to time and is given by,
-\equation
-where u is the velocity field and v is the viscosity of fluid. When viscosity is 0, this equation simplifies to inviscous burgers equation which is a prototype for equations that develop shockwaves.
-\equation
-It is also called a convection-diffusion equation because the quantities x and y represent the convection term and diffusion term respectively.
+\section{Introduction}
 
-Next we visualise the time evolution of burgers equation. For this, we consider a 1-dimensional domain OcR of sie 128, viscosity of 0.29 and the initial condition given by u(x,0) = f(x) where f is a guassian function. For boundary conditions, we will use dirichlet condition which sets the velocity at boundaries to 0. 
-Fig1 shows the time evolution of initial w.r.t. velocity for a time period of t=0,1/3,2/3,1. Observing the lines for each timestep, all the positive values tend to move towards right and the negative values towards left of the grid. This is because the differential of function is proportional to u [dont understand] in equation 1. These two trends moving inwards from opposite direction creates a shockwave approximately in the center of the grid. Fig2, shows the spatial evolution of velocity with respect to time and also captures the generation of shockwaves. 
+Differential equations are mathematical tools that help formulate the laws of physics governing simple and complex dynamical systems. They are used to model various physical phenomena like fluid flow, propagation of sound waves, dissipation of heat, etc. For example, the flow of water in a pipe or the airflow around the wings of an airplane can be described by the Navier-Stokes equation \cite{NavierStokesEquation} and the transfer of heat between two objects at different temperature can be modelled by the Heat equation \cite{HeatEquation}. Generally speaking these equations are a combination of one or more functions and their derivatives where the functions generally represent a physical quantity like velocity of a particle or temperature, and the derivative of the function represents its rate of change. Consider a function z of one variable, $z = f(x)$, here $x$ is called the independent variable and $z$ is the dependent variable as its value depends on $x$. The derivative of this function represents the rate of change of $z$ w.r.t $x$ and is represented by the Leibniz notation\cite{leibniz} $dy/dx$. When the dependent variable is dependent on more than one variable, its partial derivatives are represented by notation $\partial y/\partial x$.
 
-PDE control applications:There are some control applications where an external force is applied on this system governed by burgers equation with a goal to dampen shockwaves(ref)
+One of the simplest forms of differential equations are Ordinary differential equations (ODE). ODEs are made up of i) a single independent variable and ii) an unknown function along with its iii) derivatives. They are used to model physical phenomena like the movement of electricity, the to-and-fro motion of a pendulum, and various concepts related to the exchange of energy in a simple system. The equation z = f(x) is an ordinary differential equation as it involves a single independent variable and if it is possible to calculate the derivatives of its function. Another simple ODE is the equation for the propagation of wave, given by $d^2y/dt^2 + \omega^2y = 0$; here the constant $\omega$ represents the frequency of oscillation of wave particles. A solution to this ODE can be given by $y(t) = A sin(wt + \phi)$ where A is the amplitude of the wave and $\phi$ is the phase. This ODE represents a simple harmonic motion of a particle exhibiting periodic behaviour in time. \cite{xx}
+
+Although ODEs are useful for modelling many simple physical phenomena, when it comes to complex systems it is not enough to represent a physical system with only a single variable. For such purposes, partial differential equations are used. A partial differential equation (PDE) is made up of functions that are dependent on one or more independent variables. The order of a partial differential equation represents the highest derivative of the unknown function. Consider a simple linear parabolic partial differential equation known as the heat equation,
+\begin{equation}
+\label{eqn:simplepde}
+    \pdv{T(x,y)}{t} (x,t) = \alpha \cdot \pdv[2]{T(x,t)}{x} (x,t)
+\end{equation}
+here $\alpha$ is the diffusivity constant, $\pdv{T}{t}$ represents the rate of change of temperature(T) w.r.t. time and $\pdv[2]{T}{x}$ represents the second order derivative. So, this equation calculates the rate of change of temperature at each point in space at that particular time. Another common PDE is a convection-diffusion equation,
+\begin{equation*}
+    \pdv{u(x,t)}{t} = D \cdot \pdv[2]{u(x,t)}{x} - u(x,t) \cdot \pdv{u(x,t)}{x} 
+\end{equation*}
+Here, u is the dependent variable which can represent the velocity of fluid, or temperature in a heat transfer system, D is the diffusivity constant e.g. diffusivity of a particle in motion, thermal diffusivity or viscosity in terms of fluid flow.
+
+Differential equations can have infinitely many solutions for example, consider the equation of curve $dy/dx = x^2$, with a general solution of $y = x^3/3 + c$, where c is some arbitrary constant. Here, infinite solutions exist because c can be any integer. To get a unique solution, external constraints need to be imposed which involves specifying bounds to the domain of solutions. For the above example, we only consider the curve that goes through point $(x,y) = (0,1)$, then the only solution that satisfies this condition is with $c=1$, $y = \frac{x^3}{3} + 1$. For \textbf{initial value problems \cite{InitialValueProblem}}, these constraints require specifying only the initial value of the unknown function while \textbf{Boundary value problems} require conditions also for each boundary of the domain. In this thesis, we will focus on boundary value problems and the types of conditions normally encountered in the solution of partial differential equations are, Dirichlet boundary conditions \cite{Dirichlet}, Neumann boundary conditions \cite{Neumann} and Robin boundary conditions \cite{Robin} and mixed boundary conditions.
+
+\textbf{\color{red}PENDING: explain each boundary condition with an image of how it looks.}
+Dirichlet boundary condition, aka. first-type boundary condition specifies the values that an unknown function needs to take on along the boundary of the domain. For example, talking about heat diffusion in a room, if the temperature at walls is specified by a function $f$, this implies Dirichlet boundary conditions and if the temperature is specified by the normal derivative of the function on a surface, it's called Neumann boundary condition. In the following section, we will discuss different methods for solving partial differential equations using these boundary conditions.
+
+\section{Solving PDEs}
+
+The solution methods for partial differential equations generally fall under two main categories, analytical methods and numerical methods. Analytical methods involve calculating the exact solution given some initial condition while, numerical methods calculate an average of finite approximations. Among analytical methods, \textit{Separation of variables} is a well known method which as the name suggests involves separating two variables on either side of the equation and further integrating them to calculate the final solution. For example, consider the equation {\color{red}$d^2y/dx^2 = x^2/y^2$. Rewriting this as, $y^2d^2y/x^2dx^2$ and integrating it we get, $y^3/3 = x^3/3 + 1$,
+in general, $y^3=x^3+c$. Let's say the initial condition is (x,y) = (0,1), then substituting this we get c=1, so the general solution for initial condition (x,y)=(0,1) is $y^3=x^3+1$. }\textbf{Explain properly}
+
+An analytical solution requires complete knowledge of how the problem works which is impossible for many complex problems. For complex problems, numerical methods are more feasible. Roughly speaking numerical methods involve framing a problem using the trial and error approach across a set of candidate solutions. This gives satisfactory results, especially because oftentimes we are concerned with an approximately good solution rather than the exact one. Few of the well known numerical methods for solving a PDE are finite element method, finite differences method, finite volume method and more. All these methods use discretization to approximate the solution to PDE which involves evolving a discrete set of values and taking small steps in time to approximate the continuous function of space and time \cite{NumericalMethodsForEngineers}. In this thesis we have used Phiflow as the partial differential equation solver which uses finite differences method.
 
 
 
+\section{PDE Examples}
+In this section we will discuss some of the well known partial differential equations and explain their properties along with some relevant control problems.
+\subsection{Burgers equation}
+Burgers equation is one of the simplest PDEs describing the velocity of a fluid with respect to time and is given by,
+\begin{equation}
+    \label{eqn:burgers1}
+    \dv{u(x,t)}{t} = - u(x,t) \cdot \dv{u(x,t)}{t} + v \cdot \dv[2]{u(x,t)}{t}
+\end{equation}
+where u is the velocity field and v is the viscosity of the fluid. It is also called a convection-diffusion equation because the quantities $u(x,t) \cdot \dv{u(x,t)}{t}$ and $\dv[2]{u(x,t)}{t}$ represent the convection term and diffusion term respectively. When the viscosity is 0, this equation simplifies to the in-viscous burgers equation which is a prototype for equations that develop shock waves given by,
+\begin{equation*}
+    \dv{u(x,t)}{t} + u(x,t) \cdot \dv{u(x,t)}{t} = 0
+\end{equation*}
 
+Next, we visualise the time evolution of the burgers equation. For this, we consider a 1-dimensional domain $\Omega \in \mathcal{R}$ of size 128, viscosity of $0.29$ and the initial condition given by $u(x,0) = f(x)$ where $f$ is a gaussian function. For boundary conditions, we will use the Dirichlet condition which sets the velocity at boundaries to 0.
 
+\begin{figure}[htbp]
+    \centering
+    \subfloat[1D Burgers equation]{\includegraphics[width=0.55\textwidth]{thesis/figures/burgers_sim_plot1.pdf}}
+    \subfloat[1D Heat equation]{\includegraphics[width=0.55\textwidth]{thesis/figures/heat_sim_plot1.pdf}}\hfill
+    \caption{ Actions predicted by}
+    \label{fig:burgers_heat}
+\end{figure}
 
+Figure \ref{fig:burgers_heat}(a) shows the time evolution of initial velocity for a time period of $t=0, 1/3,2/3,1$. Observing the lines for each time step, all the positive values tend to move towards the right and the negative values towards the left of the grid. This is because the differential of function is proportional to u in \ref{eqn:burgers1}. These two trends moving inwards from opposite direction creates a shockwave approximately in the centre of the grid. There are some control applications where an external force is applied to this system governed by burgers equation to dampen shockwaves(\cite{PBDL})
 
-
-
-
-
-
-
-
-
-
-Heat Equation
+\subsection{Heat equation}
 The heat equation is a simple diffusion equation that calculates the change in the temperature at each point in space for that particular time and is given by,
-\equation
+
+\begin{equation*}
+    \pdv{u(x,t)}{t} = D \cdot \pdv[2]{u(x,t)}{t}
+\end{equation*}
 Here, u is the temperature at each point x in space at time t, D is the diffusivity constant that defines the rate at which the exchange of heat occurs in the field and the final second order differential is the diffusion term.
 
-Consider a simulation of heat transfer in a pre-heated rod. We assume that the rod is insulated i.e. there is no exchange of heat between the rod and the environment from outside of the rod and the two ends of rod are at a constant temperature of 0 degrees. Now we know from the law of conservation of energy that the exchange of heat occurs from hotter areas to colder areas untill the temperature is constant at every point in the field. Fig1 and 2, showcase this phenomena. Fig1, shows the simulation of heat transfer inside the rod for a finite number of steps. It is evident from the line plot that the local maximas move downwards towards 0 as they are at higher temperature than their neighbors while the local minimas move upwards towards 0, both stabilizing near 0. Fig2 shows this evolution w.r.t. spaec and time. This plot also shows the diffusion between hotter areas inside the rod in yellow and the colder areas in blue as the time passes.
+Consider a simulation of heat transfer in a pre-heated rod. We assume that the rod is insulated i.e. there is no exchange of heat between the rod and the environment from outside of the rod and the two ends of rod are at a constant temperature, say 0. Now we know from the law of conservation of energy that the exchange of heat occurs from hotter areas to colder areas until an equilibrium of temperature is achieved. Figure \ref{fig:burgers_heat}(b) shows this phenomena by simulating the heat transfer inside the rod for a finite number of steps. It is evident from the line plot that the local maxima move downward towards 0 as they are at a higher temperature than their neighbours while the local minima move upward towards 0, both stabilizing near 0.
 
-Considering the control problems involving heat equation, this equation is sometimes used in conjunction with other equations in an application. For example, if we are talking about controlling the temperature of a room with a fan, the airflow from a fan can be calculated by Navier Stokes equation or Burgers equation and the temperature change is calculated with heat equation.
+Considering the control problems involving heat equations, this equation is sometimes used in conjunction with other equations in an application. For example, if we are talking about controlling the temperature of a room with a fan then the airflow from a fan can be calculated by the Navier Stokes equation or Burgers equation, the temperature change is calculated with the heat equation.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Kuramoto Sivashinsky: is a fourth order convection-diffusion equation that helps model physical phenoma like flame fronts, fluid flow and more. One property of KS equation is that with the increase in domain complexity, the stability of system decreases.
-4) Navier stokes: Navier stokes is one of the biggest equation modeling fluid flow in Physics. It uses velocity of fluid and pressure as parameter and show the change in these quantities in the presence of a force. This equation is in particularly used for control applications related to fluid flow problems like drag reduction and lift reduction.
-
-
-
-
-
-
-
-
-
-
-
-
-
+\textbf{\color{red} PENDING: Kuramoto Sivashinsky and NavierStokes ~ 1page}
 
 
 PDE
@@ -221,3 +177,82 @@ References:
 \refa Numerical methods for Engineers
 \refx http://ndl.ethernet.edu.et/bitstream/123456789/32700/1/2.pdf.pdf
 https://www.control.tf.uni-kiel.de/en/teaching/summer-term/control-of-pde-systems/fileadmin/lecture_notes_2020
+
+removed:
+
+    \subsection{Finite Difference Method}
+    Finite difference methods are numerical methods for approximating solutions to a PDE by approximating derivatives with finite differences. For example, consider an ordinary differential equation of the form:
+    \begin{equation}
+    \label{eqn:eq1}
+     t^\prime(x) = a \cdot t(x) + b
+    \end{equation}
+    The Euler's method \cite{EulerMethod} for solving this equation is given by
+
+    \begin{equation*}
+     \frac{t(x+h) - t(x)}{h} \approx t^\prime(x)
+    \end{equation*}
+    where $t(x + h)$ is the finite difference term. Substituting the value of $t'(x)$ from \ref{eqn:eq1}, we get,
+    \begin{equation*}
+    \begin{split}
+        \frac{t(x+h) - t(x)}{h} &= a \cdot t(x) + b\\
+        \therefore t(x+h) - t(x) &= ( a \cdot t(x) + b) \cdot h\\
+        &= ah \cdot t(x) + bh\\
+        \therefore t(x+h) &= t(x) + (a \cdot t(x) + b) \cdot h
+    \end{split}
+    \end{equation*}
+
+    This constitutes the finite difference equation for this ODE and solving this equation, gives an approximate solution to this equation. The finite difference method is well formulated in chapter 20 of the book "Numerical methods for Engineers" \cite{NumericalMethodsForEngineers}. Here we will briefly explain this method using an example from the book for the Laplace equation. For more equations like other elliptic or parabolic equations, please refer to chapters 29 and 30 of the book.
+
+    To understand how the finite difference method works in more detail, we consider the solution of a simple Laplace equation which can be used to model a variety of problems involving the potential of an unknown variable \cite{NumericalMethodsForEngineers}. The second-order linear Laplace equation is given by,
+
+    \begin{equation}
+    \label{eqn:eq2}
+    \pdv[2]{T}{x} + \pdv[2]{T}{y} = 0
+    \end{equation}
+    Consider a square grid as the domain, $\Omega_{ij}$ where i,j represents points in the x and y direction of the domain respectively. the central differences are given by
+
+    \begin{equation*}
+    \begin{split}
+        \pdv[2]{T}{x} &= \frac{T_{i+1,j} - 2T_{ij} + T_{i-1,j}}{\Delta \cdot x^2}\\
+        \pdv[2]{T}{y} &= \frac{T_{i,j+1} - 2T_{ij} + T_{i,j-1}}{\Delta \cdot y^2}\\
+    \end{split}
+    \end{equation*}
+    Since the grid is square, $\Delta x = \Delta y$, the Laplace difference equation becomes,
+
+    \begin{equation*}
+    T_{i+1} + T_{i-1,j} + T_{i, j+1} + T_{i,j-1} - 4T_{i,j} = 0
+    \end{equation*}
+    To obtain the exact solution of any PDE, the boundary conditions need to be specified. Consider the Dirichlet boundary conditions, which means setting each boundary of the grid to some constant value as shown in the figure, Now solving for $i=1,j=1$, we get,
+
+    \begin{equation*}
+    T_{2,1} + T_{0,1} + T_{1,2} + T_{1,0} - 4T_{1,1} = 0
+    \end{equation*}
+    We know from the boundary conditions that $t_{0,1} = 75$, $t_{1,0} = 0$, substituting this we get,
+
+    \begin{equation*}
+    -4T_{1,1} + T_{1,2} + T_{2,1} = -75
+    \end{equation*}
+
+
+
+
+
+    Similarly, the rest of the equations can be calculated for other values of i,j in the grid and solving these equations will give the approximate solution using the finite difference method. Also, since the grid is quite small, it is possible to calculate the equations by hand but in practice, there is a method called "The Liebman method" \cite{LiebmannMethod} that is used for the calculation of complex grids. (refer to chapter 29 of book \cite{NumericalMethodsForEngineers} for more detail).
+
+    \subsection{Finite Elements Method}
+
+    The finite differences method introduced before doesn't work well for irregular geometry, complex boundary conditions or heterogeneous compositions \cite{NumericalMethodsForEngineers}. For this, the alternative is the finite element method which first divides the solution domain into elements which are simpler in shape and then find an approximate solution for each element function thereby assembling them into a unified solution. As in the previous method, we provide a brief description of the steps involved in solving a PDE with the finite element method. For a more detailed explanation, one may refer to chapter 31 of the book "Numerical methods for engineers" \cite{NumericalMethodsForEngineers}.
+
+    The general implementation of the finite element method consists of 5 main steps: discretization, element equations, assembly, boundary conditions and solution. The discretization step involves dividing the domain into a finite number of elements e.g.
+    For one dimensional domain, a line, the division can be done by dividing the line using a finite number of points on the line. For two-dimensional, one can use triangular elements or quadrilateral elements and for three-dimensional, a plane of a hexahedron shape can be used for discretizing the domain. The second step is to develop differential equations for each discretized element. This consists of two steps. The first, step involves the choice of approximate functions a.k.a. basis functions that are used for approximating the individual elements. For example, consider the following equation of line \cite{NumericalMethodsForEngineers},
+
+    \begin{equation*}
+    u(x) = a_0 + a_1 \cdot x
+    \end{equation*}
+    where $u(x)$ is the dependent variable, $a_0$ and $a_1$ are the constants and x is the independent variable. Here, the dependent variable can be written as a linear combination of approximate functions as follows,
+
+    \begin{equation*}
+        u = N_1u_1 + N_2u_2
+    \end{equation*}
+    where $u_1$ and $u_2$ are the approximate functions with, $u_1 = a_0 + a_1 x_1$, $u_2 = a_0 + a_1 x_2$ and $N_1 = \frac{x_2 - x}{x_2 - x_1}$, $N_2 = \frac{x-x_1}{x_2 - x_1}$
+    The next step is to find the right value for coefficients that can help solve the problem optimally which involves methods like the variational approach and the method of weighing residuals \cite{NumericalMethodsForEngineers}. Once the individual element functions are developed, they are assembled in the next step which involves combining all the individual element equations into one unified equation that represents the entire system. Then, the boundary conditions are applied to this unified system before finally solving the system using methods like LU decomposition. \cite{NumericalMethodsForEngineers}

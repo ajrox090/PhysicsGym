@@ -10,12 +10,12 @@ Experiment1: Heat equation control (3p)
         - optimal control
             - fig2b: effect of optimal control sequence on states
     - RL (1 1/3p)
-        - fig3: curr state >0, action and reference state at 4 timesteps (4 figures)
-        - fig4: curr state <0, action and reference state at 4 timesteps (4 figures)
-        - fig5: rewards and actions analysis
+        - fig3: curr state >0, action and reference state at 300 timesteps (6 figures)
+        - fig4: curr state <0, action and reference state at 300 timesteps (6 figures)
+        - fig5: rl vs random 
     - MPC (1 1/3p)
-        - fig6: cont state >0, action and reference state at 4 timesteps (4 figures)
-        - fig7: cont state <0, action and reference state at 4 timesteps (4 figures)
+        - fig6: cont state >0, action and reference state at 300 timesteps (6 figures)
+        - fig7: cont state <0, action and reference state at 300 timesteps (6 figures)
         - fig8: predicted actions analysis
     - comparision: RL and MPC (1/3p)
 
@@ -48,6 +48,16 @@ When the environmet is not influenced by a controller, the heat equation balance
 
 For the initial state >0 in fig2b, the following negative control sequence achieves our goal, 
 An = [-0.4 if i<12 else 0.0 for all actions] and for initial state <0, the positive control sequence works, An=[0.4 if i < 12, else 0.0 for all actions]. Next we will train the RL agent to learn the optimal control sequence by using only the state description as input and the rewards calculated based on how far the state is from reference state.
+
+Next let's discuss the performance of DDPG agent trained for 10 epochs and 200 time steps with the same setup as above.
+fig3 shows the actions predicted by the rl agent and the respective effect on change of states for the timesteps, 1,15,30,60,120 and 299. Anaylzing the actions, it is clear that the agent chooses an action of magnitude -1.0 when the state is above 0 (fig3a,3b). When the left half of the state is below 0, the agent reduces this magnitude, still negative (fig3c,3d) and brings the action down to 0 when the equation will balance itself near 0 (fig3e,3f). This shows the agent has learnt the correct magnitude of actions to be performed based on how high the state is above 0. To further verify the generalization, we tested with the negative state, where the state is below 0 so, the optimal actions to be performed should be positive in the beginning and then 0. As shown in the fig4, the agent shows similar performance for negative states by lifting the state above 0 with positive actions and then bringing the actions down to 0 when the equation will balance itself near 0. This shows good generalization of our agent especially because the agent was trained only on positive states. Comparing the performance of RL with random agent and uncontrolled state, in figx we can see that the performance of rl agent is better than random agent.
+
+Next we use MPC to control the heat equation with prediction horizon p=5 and similar timesteps as rl agent. fig6 shows the actions predicted by mpc agent as a result of minimizing the cost function, are similar to rl agent in the beginning of simulation. ...
+
+
+
+
+
 
 
 
