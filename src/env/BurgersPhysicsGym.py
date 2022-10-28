@@ -1,11 +1,7 @@
 import copy
 import numpy as np
-from matplotlib import pyplot as plt
 
-import phi.math
 from phi.field import CenteredGrid
-from phi.physics._effect import FieldEffect
-from stable_baselines3.common.running_mean_std import RunningMeanStd
 
 from src.env.PhysicsGym import PhysicsGym
 from src.env.physics.burgers import Burgers
@@ -19,79 +15,40 @@ class BurgersPhysicsGym(PhysicsGym):
                  domain_dict=None,
                  dt: float = 0.01,
                  viscosity: int = 0.3,
-                 dxdt: int = 100):
-        super(BurgersPhysicsGym, self).__init__(domain, dx, dt, step_count, domain_dict, dxdt,
-                                                reward_rms=RunningMeanStd())
+                 diffusion_substeps: int = 1,
+                 dxdt: int = 100,
+                 saveFig: bool = False,
+                 title: str = "experiment1",
+                 plotFolder: str = "plots",
+                 effects_label: str = "effect",
+                 xlim: int = 0,
+                 ylim: int = 3):
+        super(BurgersPhysicsGym, self).__init__(domain, dx, dt, step_count,
+                                                domain_dict, dxdt=dxdt, saveFig=saveFig,
+                                                title=title, plotFolder=plotFolder,
+                                                effects_label=effects_label,
+                                                xlim=xlim, ylim=ylim)
 
         self.forces = None
-        self.actions_grid_trans = None
-        self.viscosity = viscosity
-        self.physics = Burgers(default_viscosity=viscosity, diffusion_substeps=1)
-        self.reward = []
-        self.previous_rew = []
-        self.total_steps = step_count // 10
+        self.physics = Burgers(default_viscosity=viscosity, diffusion_substeps=diffusion_substeps)
         self.reset()
 
     def reset(self):
         self.step_idx = 0
-        if self.reward is not None:
-            self.previous_rew = copy.deepcopy(self.reward)
-            self.reward = []
+
         self.init_state = CenteredGrid(self.simpleNormalDistribution, **self.domain_dict)
-        # self.init_state = CenteredGrid(self.justOnes, **self.domain_dict)
+        # self.init_state = CenteredGrid(self.justRandom, **self.domain_dict)
 
         self.cont_state = copy.deepcopy(self.init_state)
         self.reference_state_np = np.zeros(self.N).reshape(self.N, 1)
-        self.reference_state_phi = CenteredGrid(self.reference_state_np.reshape(-1)[0], **self.domain_dict)
+
         return self._build_obs()
-
-    def step(self, actions: np.ndarray):
-
-        # prepare actions
-        actions = self.action_transform(actions[0])
-        self.actions = actions.reshape(self.cont_state.data.native("x,vector").shape[0])
-        actions_tensor = phi.math.tensor(self.actions, self.cont_state.shape)
-        self.actions_grid_trans = CenteredGrid(actions_tensor, **self.domain_dict)
-        self.forces = FieldEffect(self.actions_grid_trans, ['temperature_effect'])
-
-        # step environment
-        self.cont_state = self.step_physics(self.cont_state, (self.forces,))
-
-        # visualize
-        # if self.step_idx == self.step_count - 1:
-        if self.step_idx % (self.total_steps - 1) == 0:
-            self.render()
-
-        # post-processing
-        self.step_idx += 1
-        obs = self._build_obs()
-        rew = self._build_reward(obs)
-        self.reward_rms.update(rew)
-        rew = (rew - self.reward_rms.mean) / np.sqrt(self.reward_rms.var)
-        done = np.full((1,), self.step_idx == self.step_count)
-        info = {'rew_normalized': rew}
-        rew = np.sum(rew, axis=0)
-        self.reward.append(rew)
-        return obs, rew, done, info
-
-    def render(self, mode: str = 'live', title: str = 'BurgersPhysicsGym') -> None:
-        x = np.arange(0, self.domain, self.dx)
-        plt.tick_params(axis='x', which='minor', length=10)
-        plt.grid(True, linestyle='--', which='both')
-        plt.plot(x, self.init_state.data.native("vector,x")[0], label='init state')
-        # plt.plot((self.forces.field.at(self.cont_state)).data.native("vector,x")[0], label='action')
-        plt.plot(x, self.actions_grid_trans.data.native("vector,x")[0], label='action')
-        plt.plot(x, self.cont_state.data.native("vector,x")[0], label='cont state')
-        # plt.plot(x, self.reference_state_np, label='target state')
-        plt.xlim(0, self.domain)
-        plt.ylim(-3, 3)
-        plt.legend()
-        plt.title(title + f' {self.step_idx} step')
-
-        plt.show()
 
     def _build_obs(self) -> np.ndarray:
         return self.cont_state.data.native("vector,x")[0]
 
     def _build_reward(self, obs: np.ndarray) -> np.ndarray:
-        return -np.sum((obs - self.reference_state_np) ** 2 / self.N, axis=-1)
+        # rew = -np.sum((obs - self.reference_state_np.flatten()) ** 2 / self.N)
+        rew = -np.sum((obs - self.reference_state_np) ** 2 / self.N, axis=-1)
+        rew = np.sum(rew, axis=0)
+        return rew

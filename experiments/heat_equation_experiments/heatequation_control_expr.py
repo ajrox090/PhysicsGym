@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from src.agent.MPCAgent import MPCAgent
 from src.agent.RandomAgent import RandomAgent
-from src.env.HeatPhysicsGym import HeatPhysicsGym, HeatPhysicsGymNoRMS
+from src.env.HeatPhysicsGym import HeatPhysicsGym, HeatPhysicsGym
 from src.env.PhysicsGym import PhysicsGym
 
 
@@ -124,7 +124,7 @@ domain = 3
 step_count = 300
 domain_dict = dict(x=int(domain / dx), bounds=Box[0:1],
                    extrapolation=extrapolation.BOUNDARY)
-env = HeatPhysicsGymNoRMS(domain=domain, dx=dx, domain_dict=domain_dict,
+env = HeatPhysicsGym(domain=domain, dx=dx, domain_dict=domain_dict,
                      dt=0.01, step_count=step_count,
                      diffusivity=2.0, dxdt=5)
 env.reset()

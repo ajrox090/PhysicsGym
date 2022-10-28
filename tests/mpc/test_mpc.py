@@ -31,7 +31,7 @@ def J(actions: np.ndarray, curr_state: np.ndarray, ref_states: np.ndarray):
 
     for i in tqdm(range(ph)):
         action = CenteredGrid(
-            tensor(env.action_transform(actions[i]).reshape(shape_nt_state), shape_phi_state),
+            tensor(env._action_transform(actions[i]).reshape(shape_nt_state), shape_phi_state),
             **env.domain_dict)
         state = env.step_physics(in_state=state, effects=(action,))
         states.append(state.data.native("vector,x")[0])

@@ -1,28 +1,11 @@
 import time
-from typing import Optional
-
-import numpy as np
-from matplotlib import pyplot as plt
 
 from phi.flow import *
 from stable_baselines3 import DDPG
 
 from src.agent.RandomAgent import RandomAgent
-from src.env.HeatPhysicsGym import HeatPhysicsGym, HeatPhysicsGymNoRMS
-
-
-def plotGrid(listU, domain: int, dx: float, label: list[str]):
-    x = np.arange(0, domain, dx)
-    plt.tick_params(axis='x', which='minor', length=10)
-    plt.grid(True, linestyle='--', which='both')
-    for u, lab in zip(listU, label):
-        plt.plot(x, u, label=lab)
-    plt.xlim(0, domain)
-    plt.ylim(-3, 3)
-    plt.xlabel("domain")
-    plt.ylabel("range")
-    plt.legend()
-    plt.show()
+from src.env.HeatPhysicsGym import HeatPhysicsGym
+from src.util import plotGrid
 
 
 def run(N: int = 1, _env=None, agent=None, save_model: str = None, load_model: str = None, learn: bool = False,
@@ -88,9 +71,7 @@ domain_dict = dict(x=int(domain / dx), bounds=Box[0:1],
 env = HeatPhysicsGym(domain=domain, dx=dx, domain_dict=domain_dict,
                      dt=0.01, step_count=step_count,
                      diffusivity=2.0, dxdt=dxdt)
-env_norms = HeatPhysicsGymNoRMS(domain=domain, dx=dx, domain_dict=domain_dict,
-                                dt=0.01, step_count=step_count,
-                                diffusivity=2.0, dxdt=dxdt)
+
 
 print("DDPG")
 ddpg_state = []
@@ -111,13 +92,13 @@ for epoch in [10]:
     agentPath = f"ddpgAgent3_noRMS_{epoch}epochs"
     print("train-store")
     # x = time.time()
-    # run(learn=True, save_model=agentPath, _env=env_norms, agent='ddpg', label=agentPath)
+    # run(learn=True, save_model=agentPath, _env=env, agent='ddpg', label=agentPath)
     # print(f'{time.time() - x} seconds elapsed for training with {epoch} epochs.')
     # print("--------------------------------------------------------------------------------")
 
     print("Test")
     x = time.time()
-    ddpg_state_noRMS = run(load_model=agentPath, _env=env_norms, agent='ddpg', label=agentPath)
+    ddpg_state_noRMS = run(load_model=agentPath, _env=env, agent='ddpg', label=agentPath)
     print(f'{time.time() - x} seconds elapsed for testing with N={N}.')
     ddpg_state.append(ddpg_state_noRMS)
     print("--------------------------------------------------------------------------------")

@@ -48,7 +48,7 @@ class KuramotoSivashinskyPhysicsGym(PhysicsGym):
     def step(self, actions: np.ndarray):
 
         # prepare actions
-        actions = self.action_transform(actions[0])
+        actions = self._action_transform(actions[0])
         self.actions = actions.reshape(self.cont_state.data.native("x,vector").shape[0])
         actions_tensor = phi.math.tensor(self.actions, self.cont_state.shape[0])
         self.actions_grid_trans = CenteredGrid(actions_tensor, **self.domain_dict)

@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 from phi.flow import *
 from src.agent.MPCAgent import MPCAgent
-from src.env.HeatPhysicsGym import HeatPhysicsGymNoRMS
+from src.env.HeatPhysicsGym import HeatPhysicsGym
 
 
 def plotGrid(listU, domain: int, dx: float, label: list[str]):
@@ -59,10 +59,10 @@ dx = 0.25
 domain = 3
 domain_dict = dict(x=int(domain / dx), bounds=Box[0:1],
                    extrapolation=extrapolation.BOUNDARY)
-env = HeatPhysicsGymNoRMS(domain=domain, dx=dx, domain_dict=domain_dict,
-                          dt=0.01, step_count=step_count,
-                          diffusivity=2.0, dxdt=dxdt,
-                          saveFig=True, title="experiment1", plotFolder="plots")
+env = HeatPhysicsGym(domain=domain, dx=dx, domain_dict=domain_dict,
+                     dt=0.01, step_count=step_count,
+                     diffusivity=2.0, dxdt=dxdt,
+                     saveFig=True, title="experiment1", plotFolder="plots")
 
 print("MPC")
 ph = 4
