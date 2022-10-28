@@ -8,7 +8,7 @@ dxdt = 5
 dt = 0.01
 dx = 0.25
 domain = 4
-step_count = 100
+step_count = 200
 viscosity = 0.03
 N = int(domain / dx)
 
@@ -24,6 +24,8 @@ statesList = []
 statelabels = []
 actionList = []
 actionLabels = []
+ylim_max = 0.3
+ylim_min = 0.0
 agent = BaselineAgent(env=env, u_min=-1.0, u_max=1.0)
 for _ in range(step_count):
     actions = agent.predict(observation)
@@ -31,7 +33,11 @@ for _ in range(step_count):
     #     env.enable_rendering()
     observation, reward, done, info = env.step(actions)
     # if _ % ((step_count - 1) // 3) == 0:
-    if _ in [1, 15, 30, 60, 99]:
+    if _ in [1, 15, 30, 99, 199, 299]:
+        if actions[0] > ylim_max:
+            ylim_max = actions[0]
+        if actions[0] < ylim_min:
+            ylim_min = actions[0]
         statesList.append(observation)
         statelabels.append(f't={env.step_idx/100}')
         actionList.append(env.forces.field.data.numpy("vector,x")[0])
@@ -41,6 +47,6 @@ for _ in range(step_count):
 
 # env.disable_rendering()
 plotGrid(listU=statesList, domain=domain, dx=dx, label=statelabels,
-         ylim_min=-2.0, ylim_max=2.0)
+         ylim_min=-0.5, ylim_max=2.0)
 plotGrid(listU=actionList, domain=domain, dx=dx, label=actionLabels,
-         xlim_max=1.5, ylim_max=1.0, ylim_min=-1.0)
+         xlim_max=1.2, ylim_max=ylim_max, ylim_min=ylim_min)
