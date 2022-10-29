@@ -1,13 +1,16 @@
 from phi.flow import *
 from src.env.BurgersPhysicsGym import BurgersPhysicsGym
-from src.util import plotGrid
+from src.util import plotGrid, run_experiment
 
-dxdt = 1
+np.random.seed(43)
+
+
+dxdt = 5
 dt = 0.01
 dx = 0.25
 domain = 4
-step_count = 100
-viscosity = 0.003
+step_count = 200
+viscosity = 0.03
 N = int(domain / dx)
 
 domain_dict = dict(x=int(domain / dx), bounds=Box[0:1],
@@ -29,12 +32,17 @@ for _ in range(step_count):
     actions = np.array([a])
     # if _ % ((step_count - 1) // 5) == 0:
     #     env.enable_rendering()
-    if _ % ((step_count - 1) // 3) == 0:
+    # if _ % ((step_count - 1) // 3) == 0:
+    # if _ in [1, 40, 80, 499]:
+    if _ in [0, 1, 5, 20, 40, 199]:
         results.append(observation)
-        labels.append(f'state at t={env.step_idx/100}')
+        labels.append(f't={env.step_idx/100}')
     observation, reward, done, info = env.step(actions)
-    # if env._render:
-    #     env.disable_rendering()
+    if env._render:
+        env.disable_rendering()
 
+agentPath = f'results/uncontrolled_burgers'
+run_experiment(_env=env, saveFig=agentPath)
 # env.disable_rendering()
-plotGrid(listU=results, domain=domain, dx=dx, label=labels)
+plotGrid(listU=results, domain=domain, dx=dx, label=labels, saveFig=agentPath,
+         ylim_max=1.75, ylim_min=0.0, xlim_max=3.75)

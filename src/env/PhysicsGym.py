@@ -9,8 +9,6 @@ from phi.math import tensor, inf
 from phi.flow_1 import FieldEffect
 from phi.field import Field, CenteredGrid
 
-# np.random.seed(7)
-
 
 class PhysicsGym(gym.Env):
     def __init__(self,
@@ -69,7 +67,7 @@ class PhysicsGym(gym.Env):
     def step(self, actions: np.ndarray):
 
         # prepare actions
-        self.forces = self._scalar_action_to_forces(actions, label=self.effects_label)
+        self.forces = self.scalar_action_to_forces(actions, label=self.effects_label)
         # self.forces = self.b_scalar_action_to_forces(actions, label=self.effects_label)
 
         # step environment
@@ -134,9 +132,9 @@ class PhysicsGym(gym.Env):
         # initialize a normal distribution with frozen in mean=-1, std. dev.= 1
         rv = norm(loc=0.5, scale=0.2)
         x = np.arange(0, self.domain, self.dx)
-        return alpha * rv.pdf(x)
+        return alpha * rv.pdf(x) / 2
 
-    def _scalar_action_to_forces(self, actions: np.ndarray, label: str = "effect"):
+    def scalar_action_to_forces(self, actions: np.ndarray, label: str = "effect"):
         actions_transformed = self._action_transform(actions[0]).reshape(
             self.cont_state.data.native("x,vector").shape[0])
         return FieldEffect(CenteredGrid(math.tensor(actions_transformed, self.cont_state.shape), **self.domain_dict),
@@ -164,7 +162,7 @@ class PhysicsGym(gym.Env):
 
     @staticmethod
     def simpleNormalDistribution(x):
-        result = - tensor(norm.pdf(x.native("vector,x")[0], np.random.uniform(0, 1.0), 0.2), x.shape[0]) / 1.2
+        result = tensor(norm.pdf(x.native("vector,x")[0], np.random.uniform(0, 1.0), 0.2), x.shape[0]) / 1.2
         return result
 
     def justOnes(self, x):
