@@ -1,0 +1,56 @@
+\chapter{Burgers equation control experiment}
+\label{burgers_experiment}
+
+In this experiment we will solve a simple control problem using a dynamic system governed by viscous burgers equation given by,
+\begin{equation}
+\label{eqn:burgers_expr1}
+\pdv{u(x,t)}{t} = v \cdot \pdv[2]{u(x,t)}{t} - u(x,t) \cdot \pdv{u(x,t)}{x}
+\end{equation}
+
+The problem statement goes like this, consider a dynamic system $y(t) = f(x,g,t)$ with domain of size N, x being the velocity of each particle in the system and $g$ being the control input. Find the optimal control sequence $g^*$ such that the optimal control results in the system terminating in state 0. Here 0 state means that the velocity of all particles is 0. Introducing the control term in \ref{eqn:burgers_expr1}, the equation becomes,
+
+\begin{equation*}
+\label{eqn:burgers_expr1}
+\pdv{u(x,t)}{t} = v \cdot \pdv[2]{u(x,t)}{t} - u(x,t) \cdot \pdv{u(x,t)}{x} + g(x,t)
+\end{equation*}
+
+
+This dynamic system governed by new burgers equation calculates the velocity of each particle in the domain by advective and diffusive processes given by $u(x,t) \cdot \pdv{u(x,t)}{x}$ and $v \cdot \pdv[2]{u(x,t)}{t}$ respectively. We have used Phiflow \cite{phiflow} as the PDE solver where the solver is given by $f^{\prime}: \mathcal{X} \times \mathcal{A} \to \mathcal{X}$, here $\mathcal{X}$ represents the state space and $\mathcal{A}$, the action space. The initial state $x(t=0) = x_0 \in \mathcal{X}$ is chosen uniformly at random for each agent being evaluated. The boundary conditions are set to periodic meaning the values propagating outside the domain are repeated with the values from inside the domain.
+
+The controllers in this experiment are going to predict scalar control actions $u \in \mathbb{R}$. These scalar actions are transformed into a vector of size of the domain such that the actions are effective only on the left half of the domain. In this way the actions only influence a part of the domain but are still propagated to other points in the time because of advection and diffusion mechanism. This also resembles a real world scenario where one cannot influence each and every quantity in the system. This transformation function is given by: $\mathbb{R} \to \mathbb{R}^N$. The task of the controller then is to predict the correct magnitude and directions of the actions for each time step bringing the state of the system closer to the reference state.
+
+In the rest of the chapter we will first show how the uncontrolled simulation of our problem statement looks like followed by the performance of our baseline agent, RL agent and MPC agent and finally concluding this chapter with a small comparison between the three.
+
+\break
+
+
+\begin{figure}[htbp]
+    \centering
+    {\includegraphics[width=0.7\textwidth]{thesis/figures/burgers_uncontrolled_2.pdf}}
+    \caption{ Simulation of burgers equation \ref{eqn:burgers_expr1} with no control.}
+    \label{fig:burgers_uncontrolled}
+\end{figure}
+
+\section{Uncontrolled simulation}
+
+Next we will show how the burgers equation at \ref{eqn:burgers_expr1} behaves in the absence of any control input. Roughly speaking, the equation propagates the particles with positive velocity forward and those with negative velocity backwards in the domain. Figure \ref{fig:burgers_heat}(a) shows the time evolution of velocity field for a time period of $t=0, 33, 0.66, 0.99$, which demonstrates this behavior. Observing the evolving states at each time step it is clear that, all the positive values tend to move towards the right and the negative values towards the left of the domain. This displacement occurs at the rate inversely proportional to the viscosity of the medium. For the plot we have taken the domain of size 4 with a viscosity of $3 \times 10^{-3}$ and updated the environment with a step size of $0.01$ for 200 time steps. The main goal of the reinforcement learning agent is to exploit this behavior to optimally predict the control sequence for any type of state of the system. For this we train our agent on random states. Based on the equation's behavior it is evident that the optimal control sequence would be to choose an action in the direction opposite to that of the state but only until a certain point. After that, the equation should balance itself which in our case means to bring the velocity of all particles to 0. 
+
+Now we will analyse how different types of agents will find solution to this problem and then compare them.
+
+\section{Baseline agent}
+Starting with the baseline agent, figure \ref{fig:burgers_baseline}(a) shows the state trajectories as a result of the actions predicted by our baseline agent. Here the initial state is defined by a uniformly random normal distribution to keep the diversity of states intact. It is clear from the figure that the agent is able to predict good actions similar to the optimal actions discussed before. This is because the minimizes the cost function $J: \mathcal{X} \to \mathcal{A}$ which in our case is given by mean least squares function \cite{MeanLeastSquares}. So, any action that takes the state further away from the reference state is penalized. The actions predicted by the baseline agent are shown in the figure \ref{fig:burgers_baseline}(b). At t=0.02, the state values where the action is applied on the left hand side are positive, so the agent predicts negative action of magnitude -1.0. There after it reduces the magnitude of actions for further time steps. The final result is a state closer to the reference for $x$ in $[0.2, 1.5]$ but not for other values. Now we will see how the reinforcement learning agent performs in this scenario.
+
+\begin{figure}[htbp]
+    \centering
+    \subfloat[intermediate states]{\includegraphics[width=0.5\textwidth]{thesis/figures/burgers_states_baseline.pdf}}
+    \subfloat[actions]{\includegraphics[width=0.5\textwidth]{thesis/figures/burgers_actions_baseline.pdf}} \hfill
+    \caption{Simulation of burgers equation under actions predicted by baseline agent.}
+    \label{fig:burgers_baseline}
+\end{figure}
+
+\section{Reinforcement learning agent}
+The reinforcement learning agent used is DDPG as it is a baseline for algorithms using involving continuous state and action spaces. We used the default implementation of stable_baselines3 \cite{xx} ddpg agent which learns for 20 epochs with a learning rate of $10^{-4}$. Figure \ref{fig:burgers_rl_states} shows the state trajectories as a result of the actions predicted by the rl agent. Here we have used random initial states so the agent gets access to diverse state information during training and kept the reward function similar to that of the baseline agent. It is clear from the figure that the rl agent is able to predict optimal actions and is able to bring the velocities of each particle closer to 0.
+
+
+
+In figure \ref{fig:burgers_rl_rewards} we plotted the rewards and the predicted actions at each time step. Here, agent is able to successfully maximise the rewards.
