@@ -1,6 +1,8 @@
 import numpy as np
+from labellines import labelLines
 from matplotlib import pyplot as plt
 from stable_baselines3 import DDPG
+from tqdm import tqdm
 
 from src.agent.BaselineAgent import BaselineAgent
 from src.agent.MPCAgent import MPCAgent
@@ -10,7 +12,8 @@ from src.agent.RandomAgent import RandomAgent
 def plotGrid(listU, domain: int = None, dx: float = None, label: list[str] = None,
              xlim_min=0, xlim_max=None, ylim_min=-3.0, ylim_max=3.0,
              xlabel: str = "x(t)", ylabel: str = "u(t)",
-             saveFig: str = None):
+             saveFig: str = None, linelabels: bool = False,
+             render: bool = False):
     x = None
     plt.tick_params(axis='x', which='minor', length=10)
     plt.grid(True, linestyle='--', which='both')
@@ -30,24 +33,31 @@ def plotGrid(listU, domain: int = None, dx: float = None, label: list[str] = Non
     else:
         for u, lab in zip(listU, label):
             if x is None:
-                plt.plot(u, label=lab)
+                plt.plot(u, label=str(lab))
             else:
-                plt.plot(x, u, label=lab)
-            plt.legend()
+                plt.plot(x, u, label=str(lab))
     plt.xlim(xlim_min, xlim_max)
     plt.ylim(ylim_min, ylim_max)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-
+    if linelabels:
+        labelLines(plt.gca().get_lines(), zorder=2.5)
+    elif label is not None:
+        plt.legend()
     if saveFig is not None:
         plt.savefig(f'{saveFig}.pdf', bbox_inches='tight')
-    plt.show()
+    if render:
+        plt.show()
+
+    plt.close()
+    plt.cla()
+    plt.clf()
 
 
-def run_experiment(N: int = 1, _env=None, agent=None, save_model: str = None, load_model: str = None,
-                   learn: bool = False, lr: float = 0.0001,
-                   n_epochs: int = 5, saveFig: str = None, render: bool = True, ph: int = None,
-                   ymin_states=-0.5, ymax_states=2.0):
+def run_experiment(N: int = 1, _env=None, agent=None, ph: int = None,
+                   save_model: str = None, load_model: str = None,
+                   learn: bool = False, lr: float = 0.0001, n_epochs: int = 5,
+                   render: bool = True, saveFig: str = None, linelabels: bool = False):
     if saveFig is not None and N > 1:
         raise ValueError("Currently saving figure is only implemented for single environment")
 
@@ -87,6 +97,7 @@ def run_experiment(N: int = 1, _env=None, agent=None, save_model: str = None, lo
         return None
     else:  # test
         for i in range(N):
+            pbar = tqdm(total=_env.step_count)
             obs = _env.reset()
             if saveFig is not None:
                 states_for_plot["t=0"] = obs
@@ -98,7 +109,7 @@ def run_experiment(N: int = 1, _env=None, agent=None, save_model: str = None, lo
                 else:
                     action = agent.predict(observation=obs)
                     actions[i][_env.step_idx - 1] = action[0]
-                if _env.step_idx in [1, 5, 20, 199] and (render or saveFig is not None):
+                if _env.step_idx in [5, 20, 99, 199, 399] and (render or (saveFig is not None)):
                     if render:
                         _env.enable_rendering()
                     if saveFig is not None:
@@ -107,25 +118,31 @@ def run_experiment(N: int = 1, _env=None, agent=None, save_model: str = None, lo
                 rewards[i][_env.step_idx - 2] = reward
                 if _env._render:
                     _env.disable_rendering()
-                if saveFig is not None and _env.step_idx in [2, 6, 21, 200]:
+                if saveFig is not None and _env.step_idx in [6, 21, 100, 200, 400]:
                     states_for_plot[ps] = obs
+                pbar.update(1)
             final_states[i] = obs
 
-    if render:
+    if render or (saveFig is not None):
+        if agent is not None:
+            # plot all the actions
+            plotGrid(listU=actions, xlabel="t", ylabel="actions", xlim_max=_env.step_count,
+                     ylim_min=np.min(actions), ylim_max=np.max(actions) + 0.1,
+                     saveFig=f'{saveFig}_actions', render=render)
+            if type(agent) == DDPG:
+                # plot the rewards
+                plotGrid(listU=rewards, xlabel="t", ylabel="rewards", xlim_max=_env.step_count,
+                         ylim_min=np.min(rewards), ylim_max=np.max(rewards) + 0.1,
+                         saveFig=f'{saveFig}_rewards', render=render)
+
         # plot the final state
-        plotGrid(listU=states_for_plot.values(), domain=_env.domain, dx=_env.dx,
-                 label=states_for_plot.keys(), saveFig=f'{saveFig}_states',
-                 ylim_min=ymin_states, ylim_max=ymax_states)
-
-        # plot all the actions
-        plotGrid(listU=actions, xlabel="t", ylabel="actions", xlim_max=_env.step_count,
-                 ylim_min=np.min(actions), ylim_max=np.max(actions)+0.2,
-                 saveFig=f'{saveFig}_actions')
-
-        if type(agent) == DDPG:
-            # plot the rewards
-            plotGrid(listU=rewards, xlabel="t", ylabel="rewards", xlim_max=_env.step_count,
-                     ylim_min=np.min(rewards), ylim_max=np.max(rewards) + 0.2,
-                     saveFig=f'{saveFig}_rewards')
-
+        plot_values = states_for_plot.values()
+        plot_labels = states_for_plot.keys()
+        plotGrid(listU=plot_values, domain=_env.domain, dx=_env.dx,
+                 label=plot_labels, saveFig=f'{saveFig}_states',
+                 ylim_min=round(np.min(list(plot_values)), 2),
+                 # ylim_min=min(round(np.min(list(plot_values)), 2), -1.0),
+                 ylim_max=round(np.max(list(plot_values)), 2),
+                 # ylim_max=max(round(np.max(list(plot_values)), 2), 1.0),
+                 render=render, linelabels=linelabels)
     return np.array(final_states).mean(axis=0)

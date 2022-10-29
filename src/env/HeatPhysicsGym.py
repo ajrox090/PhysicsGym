@@ -44,7 +44,6 @@ class HeatPhysicsGym(PhysicsGym):
         return self.cont_state.data.native("vector,x")[0]
 
     def _build_reward(self, obs: np.ndarray) -> np.ndarray:
-        # rew = -np.sum((obs - self.reference_state_np.flatten()) ** 2 / self.N)
         rew = -np.sum((obs - self.reference_state_np) ** 2 / self.N, axis=-1)
         rew = np.sum(rew, axis=0)
         return rew
