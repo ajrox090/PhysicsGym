@@ -16,4 +16,4 @@ figName = f'results/experiment_heat_baseline'
 env = HeatPhysicsGym(domain=domain, dx=dx, dt=dt, step_count=step_count, diffusivity=diffusivity, dxdt=dxdt,
                      domain_dict=dict(x=int(domain / dx), bounds=Box[0:1], extrapolation=extrapolation.BOUNDARY))
 
-run_experiment(_env=env, agent='baseline', saveFig=figName, render=False, linelabels=True)
+run_experiment(_env=env, agent='baseline', saveFig=figName, linelabels=True)

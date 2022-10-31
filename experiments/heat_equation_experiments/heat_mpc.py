@@ -20,6 +20,6 @@ env = HeatPhysicsGym(domain=domain, dx=dx, dt=dt, step_count=step_count, diffusi
 
 print("Test")
 x = time.time()
-run_experiment(_env=env, agent='mpc', saveFig=figName, ph=ph, render=False, linelabels=True)
+run_experiment(_env=env, agent='mpc', saveFig=figName, ph=ph, linelabels=True)
 print(f'{time.time() - x} seconds elapsed for testing.')
 print("--------------------------------------------------------------------------------")

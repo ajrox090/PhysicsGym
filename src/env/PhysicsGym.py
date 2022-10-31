@@ -158,7 +158,8 @@ class PhysicsGym(gym.Env):
 
     # initial states
     def simpleUniformRandom(self, x):
-        return tensor(np.random.choice([-1.0, 1.0]) * np.random.uniform(0, 0.5, self.N), x.shape[0])
+        # return tensor(np.random.choice([-1.0, 1.0]) * np.random.uniform(0, 0.5, self.N), x.shape[0])
+        return tensor(np.random.uniform(0, 0.5, self.N), x.shape[0])
 
     @staticmethod
     def simpleNormalDistribution(x):
