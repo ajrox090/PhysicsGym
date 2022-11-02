@@ -10,7 +10,6 @@ dx = 0.25
 domain = 3
 step_count = 400
 diffusivity = 2.0
-N = int(domain / dx)
 
 domain_dict = dict(x=int(domain / dx), bounds=Box[0:1],
                    extrapolation=extrapolation.BOUNDARY)
@@ -19,4 +18,4 @@ env = HeatPhysicsGym(domain=domain, dx=dx, domain_dict=domain_dict,
                      diffusivity=diffusivity, dxdt=dxdt)
 
 figName = f'results/experiment_heat_uncontrolled'
-run_experiment(_env=env, render=False, saveFig=figName, linelabels=True)
+run_experiment(_env=env, saveFig=figName, linelabels=True)
