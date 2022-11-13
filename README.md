@@ -18,3 +18,8 @@ Define the following methods specific to each problem
 
 ### 3. Step
 * ```action_transform()``` : define the transformation according to the problem, e.g. if you want to applying actions only at certain parts of the domain.
+
+
+## Experiments
+
+* ``` experiments/burgers_equation_experiments``` and ``` experiments/heat_equation_experiments``` contains the PDE experiments for uncontrolled simulation, baseline agent, MPC agent and RL agent individually. The file ending in ```_eval``` compares all the three agents using multiple random initial states.
