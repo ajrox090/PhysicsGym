@@ -1,5 +1,3 @@
-from phi import vis
-from phi.field import CenteredGrid
 from phi.physics import diffuse
 from phi.physics._effect import effect_applied
 from phi.physics._physics import Physics, StateDependency

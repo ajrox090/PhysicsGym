@@ -8,7 +8,7 @@ from src.util import run_experiment
 np.random.seed(43)
 
 N = 1
-ph = 10
+ph = 5
 dxdt = 5
 dt = 0.01
 dx = 0.25

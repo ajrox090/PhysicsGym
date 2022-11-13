@@ -37,35 +37,3 @@ class BurgersPhysicsGym(PhysicsGym):
         rew = -np.sum((obs - self.reference_state_np) ** 2 / self.N, axis=-1)
         rew = np.sum(rew, axis=0)
         return rew
-
-    def _build_reward2(self, obs):
-        reshaped_forces = obs.reshape(obs.shape[0], -1)
-        return -np.sum(reshaped_forces ** 2, axis=-1)
-
-    # def step(self, actions: np.ndarray):
-    #
-    #     # prepare actions
-    #     self.forces = self.scalar_action_to_forces(actions, label=self.effects_label)
-    #     # self.forces = self.b_scalar_action_to_forces(actions, label=self.effects_label)
-    #
-    #     # step environment
-    #     self.cont_state = self.step_physics(self.cont_state, (self.forces,))
-    #
-    #     # visualize
-    #     if self._render:
-    #         self.render(xlim=self.xlim, ylim=self.ylim,
-    #                     title=f'Burgers simulation with {[actions[0] if actions[0] > 0 else "uncontrolled"][0]}'
-    #                           f' action at step {self.step_idx}')
-    #
-    #     # post-processing
-    #     self.step_idx += 1
-    #     obs = self._build_obs()
-    #     # rew = self._build_reward(obs)
-    #     rew = self._build_reward2(obs)
-    #     # normalize reward
-    #     self.reward_rms.update(rew)
-    #     rew = (rew - self.reward_rms.mean) / np.sqrt(self.reward_rms.var)
-    #     rew = np.sum(rew, axis=0)
-    #     done = np.full((1,), self.step_idx == self.step_count + 1)
-    #     info = {'reward': rew}
-    #     return obs, rew, done, info

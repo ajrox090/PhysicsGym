@@ -7,8 +7,6 @@ from src.env.physics.heat import Heat
 from src.env.PhysicsGym import PhysicsGym
 
 
-# np.random.seed(0)
-
 class HeatPhysicsGym(PhysicsGym):
     def __init__(self,
                  domain: int = 5,

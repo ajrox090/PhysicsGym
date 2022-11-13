@@ -3,11 +3,11 @@ from phi.flow import *
 from src.env.HeatPhysicsGym import HeatPhysicsGym
 from src.util import run_experiment, plotGrid
 
+np.random.seed(43)
 N = 1
 dxdt = 5
 dt = 0.01
 dx = 0.25
-seed = 43
 domain = 3
 epoch = 1000
 lr = 0.0001
@@ -29,7 +29,6 @@ agentPath = f'results/ddpgAgent1_heat_{epoch}epochs_{step_count}steps'
 # print(f'{time.time() - x} seconds elapsed for training with {epoch} epochs.')
 # print("--------------------------------------------------------------------------------")
 print("Test")
-# np.random.seed(43)
 x = time.time()
 # agentPath = "ddpgAgent_working"
 env.step_count = 400
