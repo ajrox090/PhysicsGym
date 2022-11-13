@@ -38,9 +38,9 @@ class PhysicsGym(gym.Env):
         self.effects_label = effects_label
 
         self.observation_space = gym.spaces.Box(low=-inf, high=inf, dtype=np.float32,
-                                                shape=self._get_obs_shape())
+                                                shape=self.obs_shape())
         self.action_space = gym.spaces.Box(low=-1, high=1, dtype=np.float32,
-                                           shape=self._get_act_shape())
+                                           shape=self.action_shape())
 
         # variables specific to problem
         self.physics = None
@@ -65,6 +65,12 @@ class PhysicsGym(gym.Env):
         raise NotImplementedError
 
     def step(self, actions: np.ndarray):
+        """ 1. transform actions to apply to the physics environment
+            2. update the ennvironment
+            3. visualize new state of environment
+            4. calculate new observations
+            5. prepare rewards
+            """
 
         # prepare actions
         self.forces = self.scalar_action_to_forces(actions, label=self.effects_label)
@@ -81,8 +87,8 @@ class PhysicsGym(gym.Env):
 
         # post-processing
         self.step_idx += 1
-        obs = self._build_obs()
-        rew = self._build_reward(obs)
+        obs = self.build_obs()
+        rew = self.build_reward(obs)
         done = np.full((1,), self.step_idx == self.step_count + 1)
         info = {'reward': rew}
         return obs, rew, done, info
@@ -115,35 +121,32 @@ class PhysicsGym(gym.Env):
         return in_state
 
     # helper methods
-    def _get_obs_shape(self):
-        return self.N,
-
-    def _get_act_shape(self):
-        return 1,
-
-    def _build_obs(self):
+    def obs_shape(self):
+        """ This method defines the shape of the observation space."""
         raise NotImplementedError
 
-    def _build_reward(self, obs: np.ndarray) -> np.ndarray:
+    def action_shape(self):
+        """ This method defines the shape of the actions space"""
         raise NotImplementedError
 
-    # conversion methods for actions
-    def _action_transform(self, alpha):
-        # initialize a normal distribution with frozen in mean=-1, std. dev.= 1
-        rv = norm(loc=0.5, scale=0.2)
-        x = np.arange(0, self.domain, self.dx)
-        return alpha * rv.pdf(x) / 2
+    def build_obs(self):
+        """ This method defines the observation vector """
+        raise NotImplementedError
+
+    def build_reward(self, obs: np.ndarray) -> np.ndarray:
+        """ This method defines the calculation of reward for each time step.
+        The normalization of rewards should be handled here. """
+        raise NotImplementedError
+
+    def action_transform(self, alpha):
+        """ This method defines the transformation of actions before applying to Phiflow's field object."""
+        raise NotImplementedError
 
     def scalar_action_to_forces(self, actions: np.ndarray, label: str = "effect"):
-        actions_transformed = self._action_transform(actions[0]).reshape(
+        actions_transformed = self.action_transform(actions[0]).reshape(
             self.cont_state.data.native("x,vector").shape[0])
         return FieldEffect(CenteredGrid(math.tensor(actions_transformed, self.cont_state.shape), **self.domain_dict),
                            [label])
-
-    def b_scalar_action_to_forces(self, actions: np.ndarray, label: str = "effect"):
-        return FieldEffect(CenteredGrid(math.tensor(self._action_transform(actions[0]).reshape(
-            self.cont_state.data.native("x,vector").shape), self.cont_state.shape), **self.domain_dict),
-            [label])
 
     @staticmethod
     def forces_to_numpy(forces: FieldEffect):
@@ -158,39 +161,9 @@ class PhysicsGym(gym.Env):
 
     # initial states
     def simpleUniformRandom(self, x):
-        # return tensor(np.random.choice([-1.0, 1.0]) * np.random.uniform(0, 0.5, self.N), x.shape[0])
         return tensor(np.random.uniform(0, 0.5, self.N), x.shape[0])
 
     @staticmethod
     def simpleNormalDistribution(x):
         result = tensor(norm.pdf(x.native("vector,x")[0], np.random.uniform(0, 1.0), 0.2), x.shape[0]) / 1.2
-        return result
-
-    def justOnes(self, x):
-        return tensor([1.0 for _ in range(self.N)], x.shape[0])
-
-    def justRandom(self, x):
-        return tensor([1.0 if i < self.N / 2 else 0.0 for i in range(self.N)], x.shape[0])
-
-    def simpleGauss(self, x):
-        N = x.native("vector,x")[0].shape
-        xshape = x.shape
-        # n = np.random.random(12)
-        # leftloc = math.random_uniform(xshape, low=n[0], high=n[1])
-        # leftamp = math.random_uniform(xshape, low=n[2], high=n[3])
-        # leftsig = math.random_uniform(xshape, low=n[4], high=n[5])
-        # rightloc = math.random_uniform(xshape, low=n[6], high=n[7])
-        # rightamp = math.random_uniform(xshape, low=-n[8], high=n[9])
-        # rightsig = math.random_uniform(xshape, low=n[10], high=n[11])
-
-        leftloc = math.random_uniform(xshape, low=0.2, high=0.4)
-        leftamp = math.random_uniform(xshape, low=0, high=3)
-        leftsig = math.random_uniform(xshape, low=0.05, high=0.15)
-        rightloc = math.random_uniform(xshape, low=0.6, high=0.8)
-        rightamp = math.random_uniform(xshape, low=-3, high=0)
-        rightsig = math.random_uniform(xshape, low=0.05, high=0.15)
-
-        left = leftamp * math.exp(-0.5 * (x - leftloc) ** 2 / leftsig ** 2)
-        right = rightamp * math.exp(-0.5 * (x - rightloc) ** 2 / rightsig ** 2)
-        result = left + right
         return result

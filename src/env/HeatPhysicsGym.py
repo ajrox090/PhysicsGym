@@ -2,6 +2,7 @@ import copy
 import numpy as np
 
 from phi.field import CenteredGrid
+from scipy.stats import norm
 
 from src.env.physics.heat import Heat
 from src.env.PhysicsGym import PhysicsGym
@@ -29,19 +30,27 @@ class HeatPhysicsGym(PhysicsGym):
 
     def reset(self):
         self.step_idx = 0
-
         self.init_state = CenteredGrid(self.simpleUniformRandom, **self.domain_dict)
-        # self.init_state = CenteredGrid(self.justOnes, **self.domain_dict)
-
         self.cont_state = copy.deepcopy(self.init_state)
         self.reference_state_np = np.zeros(self.N).reshape(self.N, 1)
+        return self.build_obs()
 
-        return self._build_obs()
+    def obs_shape(self):
+        return self.N,
 
-    def _build_obs(self) -> np.ndarray:
+    def action_shape(self):
+        return 1,
+
+    def build_obs(self) -> np.ndarray:
         return self.cont_state.data.native("vector,x")[0]
 
-    def _build_reward(self, obs: np.ndarray) -> np.ndarray:
+    def build_reward(self, obs: np.ndarray) -> np.ndarray:
         rew = -np.sum((obs - self.reference_state_np) ** 2 / self.N, axis=-1)
         rew = np.sum(rew, axis=0)
         return rew
+
+    def action_transform(self, alpha):
+        # initialize a normal distribution with frozen in mean=-1, std. dev.= 1
+        rv = norm(loc=0.5, scale=0.2)
+        x = np.arange(0, self.domain, self.dx)
+        return alpha * rv.pdf(x) / 2
