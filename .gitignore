@@ -1,0 +1,6 @@
+/experiments/burgers_pdecontrolrl_experiment/forced-burgers-clash/
+/experiments/burgers_pdecontrolrl_experiment/networks/
+.idea/*
+notes/figures/.DS_Store
+notes/.DS_Store
+/experiments/heatequation1D_control_expr/log/
