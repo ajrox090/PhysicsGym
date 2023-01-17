@@ -2,6 +2,7 @@
 Structure
 	- Thesis Motivation
 	- Structure
+--- Foundational chapters -----
 	- partial differential equations
 		- boundary conditions
 		- solution methods
@@ -15,6 +16,7 @@ Structure
 		- introduction
 		- components
 		- RL for PDE
+--- Interface Chapters -----
 	- PhysicsGym Interface
 		- components
 		- how to use
