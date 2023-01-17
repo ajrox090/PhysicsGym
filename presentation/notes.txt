@@ -1,0 +1,36 @@
+
+Structure
+	- Thesis Motivation
+	- Structure
+	- partial differential equations
+		- boundary conditions
+		- solution methods
+		- examples
+	- Feedback control
+	- Model predictive control
+		- introduction
+		- components
+		- MPC for PDE
+	- Reinforcement learning
+		- introduction
+		- components
+		- RL for PDE
+	- PhysicsGym Interface
+		- components
+		- how to use
+	- Experiments
+		- Introduction
+			- uncontrolled
+			- baseline
+		- Heat equation control experiment
+			- MPC vs RL vs Uncontrolled vs Baseline
+			- conclusions and how can results be improved
+		- Burgers equation control experiment
+			- MPC vs RL vs Uncontrolled vs Baseline
+			- conclusions and how can results be improved
+	- Conclusion
+
+Todo
+	- prepare notes
+	- prepare latex presentation
+	- formatting
