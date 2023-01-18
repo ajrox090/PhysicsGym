@@ -4,18 +4,29 @@ Structure
 	- Structure
 --- Foundational chapters -----
 	- partial differential equations
+		- introduction
+			- Heat equation
+			- Burgers equation
 		- boundary conditions
-		- solution methods
-		- examples
+			- Dirichlet
+			- Neumann
+			- Periodic
+		- Solution methods
+			- Finite elements method
 	- Feedback control
+		- Openloop vs Closed loop
+		- Model predictive control
+		- Reinforcement learning
 	- Model predictive control
 		- introduction
-		- components
-		- MPC for PDE
+		- components of MPC
+		- Example: A dynamic system
+		- MPC algorithm
 	- Reinforcement learning
 		- introduction
-		- components
-		- RL for PDE
+		- components of RL
+		- Markov Decision Process
+		- PDE as MDP
 --- Interface Chapters -----
 	- PhysicsGym Interface
 		- components
