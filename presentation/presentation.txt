@@ -1,0 +1,74 @@
+Good morning everyone and welcome,
+
+Introduction:
+Today we will discuss my thesis: Development of a reinforcement learning interface for PDE solver. In this thesis I have developed an interface that acts as a bridge between the PDE solver library Phiflow and RL openAI-gym. Lets get started,
+
+Structure:
+This is the structure of the presentation. We will first start off with some foundational chapters and then I will introduce the interface followed by some example experiments using the interface. The foundational chapters will cover the introduction to PDEs, MPC and RL.
+
+PDEs:
+PDEs are mathematical tools that are used to formulate the laws of physics governing simple and dynamical systems.
+	- introduction
+		- captures the rate of change of quantity in the numerator w.r.t denominator.
+	- heat equation
+	- burgers equation
+	- boundary conditions
+		- lets consider the equation of a curve Xx, 
+		- here a general solution is Xx where c is some arbitrary constant. 
+		- Now, since c can be any number and the solution will still work on this differential equation. So, in order to obtain a unique solution and resemble real world scenarios, some external constraints needs to be imposed in the form of boundary conditions. 
+		- For the curve example, lets see we only consider the curve that passes through the point (x,y) = (0,1) then the only solution that satisfies the condition is with c=1, Xx.
+		- there are many types of problems based on differential equations, e.g. initial value problem, boundary value problems
+		- boundary conditions: Dirichlet, Neumann, Periodic
+
+
+Feedback control:
+	- Openloop control system
+		- In control theory two main control systems exist, open-loop and closed-loop systems. This is the block diagram of openloop control system. The controller provides an input which is applied to the system and the system produces an output. The controller is designed based on the knowledge of the system beforehand. 
+		- e.g. A basic washing machine is an example of openloop system. A user can input the time and type of wash and the machine terminates at the end of cycle.
+		- The accuracy of such systems is based on the accuracy of knowledge of system. For complex dynamic systems, its is only sometimes possible to get the model specification for the entire system. For such purposes, closed loop control systems are more feasible.
+	- Closedloop control system
+		- measures system response and feeds it back to controller.
+		- adaptive learning enables better control outputs to achieve target.
+		- e.g. Smart Temperature control system.
+			input    -> temperature of the room
+			output   -> fan speed
+			feedback -> new temperature
+
+
+MPC:
+	- Introduction
+		- MPC is a class of algorithms that aims at creating a model of a system and using it to predict control input while iteratively improving the model by solving an optimization problem
+		- solves optimization problem of minimizing a cost function
+		- cost function designed to penalize deviation from target
+		- System identification for constructing system model (requires accurate system model)
+		- incorporate constraints to limit system behavior resembling real world scenario
+	- Components
+	- PDE example for MPC
+		- consider a control problem of controlling a dynamic system governed by the heat equation wherec
+
+RL:
+	- Introduction
+		- RL is a technique that involves learning from interaction with an environment.
+		- environment is physical description of real world
+		- the controller is called an agent that interacts with the environment by performing actions chosen using a policy
+		- in return the environment responds with some feedback about the quality of actions in the form of reward
+		- goal is to maximize the reward
+	- Components
+		- components: environment, agent, policy, reward and value function
+		- environment: given by single or a combination of partial differential equations
+		- agent: solves optimization problem of maximizing reward. examples: DDPG, PPO, ...
+		- policy: mapping from given state to action space Xx.
+		determines the probability of each action for a given state and chooses the action with highest probability to maximize the cumulative reward.
+		- reward: feedback received from the environment is reward $r_t$.
+		- cumulative sum of rewards: Gt=Grt+Grt+rt...
+		- value function: represents quality of actions over time
+		\equation...
+	- PDE as MDP
+
+
+
+PENDING: 
+	- PDE chapter:
+		- talk about solution methods in the introduction slide
+		- confirm the plot axis representation for heat equation and the burgers equation in PDE chapter
+		- maybe write some text about each boundary condition in PDE chapter. One possibility is to give some examples for each condition e.g. Periodic condition represents a circular object. Dirichlet represents an insulated room and Neumann represents heating on the wall.
